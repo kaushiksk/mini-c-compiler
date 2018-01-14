@@ -1,134 +1,101 @@
 %{
-#include<stdlib.h>
-#include<stdio.h>
+
+#include <stdlib.h>
+#include <stdio.h>
 #include "symboltable.h"
+#include "tokens.h"
 
-enum{
-  KEYWORD = 25,
-  COSTANT,
-  IDENTIFIER,
-  SEMICOLON
-};
+entry_t** hash_table;
 
-enum{
-  GR_OP = 30,
-  GRE_OP,
-  LS_OP,
-  LSE_OP,
-  EQ_OP,
-  NEQ_OP
-};
-
-enum{
-  OR = 40,
-  AND,
-  NOT,
-
-};
-enum{
-  CURL_OPEN = 100,
-  CURL_CLOSE,
-  PAR_OPEN,
-  PAR_CLOSE,
-  SQUARE_OPEN,
-  SQUARE_CLOSE
-};
-
-enum{
-  MUL_OP = 120,
-  ADD_OP,
-  MINUS_OP,
-  DIV_OP,
-  MOD_OP,
-  INC_OP,
-  DEC_OP,
-  ASSSIGN
-};
 %}
 
-keywords int|long|short|signed|unsigned|for|break|continue|if|else|return|char
 letter [a-zA-Z]
 digit [0-9]
 ws [ \t]+
 identifier (_|{letter})({letter}|{digit}|_){0,31}
 hex [0-9a-f]
 
+ /* Exclusive states */
 %x CMNT
 %x PREPROC
 
 %%
-"int"
-"long"
-"short"
-"signed"
-"unsigned"
-"for"
-"break"
-"continue"
-"if"
-"else"
-"return"
-"char"
-{keywords}                   {printf("%s:keyword\n",yytext);}
-{identifier}                 {printf("%s:identfier\n",yytext);}
-{ws}                         ;
-[+-]?0[xX]{hex}+[lLuU]?      {printf("%s: constant\n", yytext);}
-[+-]?{digit}+[lLuU]?         {printf("%s: constant\n", yytext);}
-"/*"                         {BEGIN CMNT; printf("Begin comment\n");}
-<CMNT>.|\n                   ECHO;
-<CMNT>"*/"                   {BEGIN INITIAL; printf("End comment\n");}
-<CMNT>"/*"                   {printf("Nested comments are not valid!\n"); exit(1);}
-^"#include"                  {BEGIN PREPROC;}
-<PREPROC>{ws}?"<"[^>\n]+">"  {printf("%s: Header file\n",yytext);}
-<PREPROC>{ws}?\"[^"\n]+\"         {printf("%s: Header file\n",yytext);}
-<PREPROC>\n                  {BEGIN INITIAL;}
-<PREPROC>.*                   {printf("Illegal header file!\n"); exit(1);}
-"//".*                       {printf("%s: Single line comment\n",yytext);}
-\"[^\"\n]*\"                    {
+  /* Keywords*/
+"int"                             {insert( hash_table,yytext,INT);}
+"long"                            {insert( hash_table,yytext,LONG);}
+"short"                           {insert( hash_table,yytext,SHORT);}
+"signed"                          {insert( hash_table,yytext,SIGNED);}
+"unsigned"                        {insert( hash_table,yytext,UNSIGNED);}
+"for"                             {insert( hash_table,yytext,FOR);}
+"break"                           {insert( hash_table,yytext,BREAK);}
+"continue"                        {insert( hash_table,yytext,CONTINUE);}
+"if"                              {insert( hash_table,yytext,IF);}
+"else"                            {insert( hash_table,yytext,ELSE);}
+"return"                          {insert( hash_table,yytext,RETURN);}
+"char"                            {insert( hash_table,yytext,CHAR);}
 
-  if(yytext[yyleng-2]=='\\')
+{identifier}                      {insert( hash_table,yytext,IDENTIFIER);}
+{ws}                              ;
+[+-]?0[xX]{hex}+[lLuU]?           {insert( hash_table,yytext,HEX_CONSTANT);}
+[+-]?{digit}+[lLuU]?              {insert( hash_table,yytext,DEC_CONSTANT);}
+"/*"                              {BEGIN CMNT;}
+<CMNT>.|\n                        ;
+<CMNT>"*/"                        {BEGIN INITIAL;}
+<CMNT>"/*"                        {printf("Line %3d: Nested comments are not valid!\n",yylineno);}
+^"#include"                       {BEGIN PREPROC;}
+<PREPROC>{ws}?"<"[^>\n]+">"       {insert( hash_table,yytext,HEADER_FILE);}
+<PREPROC>{ws}?\"[^"\n]+\"         {insert( hash_table,yytext,HEADER_FILE);}
+<PREPROC>\n                       {BEGIN INITIAL;}
+<PREPROC>.*                       {printf("Line %3d: Illegal header file %s!\n",yylineno,yytext);}
+"//".*                            ;
+
+\"[^\"\n]*\"     {
+
+  if(yytext[yyleng-2]=='\\') /* check if it was an escaped quote */
   {
-    yyless(yyleng-1);
+    yyless(yyleng-1);       /* push the quote back if it was */
     yymore();
   }
   else
-  printf("%s:string\n",yytext);
+  insert( hash_table,yytext,STRING);
+ }
 
-                            }
-\"[^\"\n]*$                   {printf("%s: Illegal string\n",yytext); exit(1);}
-{digit}+({letter}|_)+	      {printf("%s: Illegal identifier name\n",yytext); exit(1);}
-\n                           ;
-"--"			                   {printf("%s:decrement\n",yytext);}
-"->"			                   {printf("%s:pointer selection\n",yytext);}
-"++"			                   {printf("%s:increment\n",yytext);}
-"&&"			                   {printf("%s:logical AND\n",yytext);}
-"||"			                   {printf("%s:logical OR\n",yytext);}
-"<="			                   {printf("%s:Less than or equal\n",yytext);}
-">="			                   {printf("%s:Greater than or equal\n",yytext);}
-"=="			                   {printf("%s:Equal to\n",yytext);}
-"!="		                     {printf("%s:Not equal to\n",yytext);}
-";"			                     {printf("%s:Terminator\n",yytext);}
-"{"                          {printf("%s:Open curly brackets\n",yytext);}
-"}"                          {printf("%s:Close curly brackets\n",yytext);}
-","			                     {printf("%s:Comma\n",yytext);}
-"="			                     {printf("%s:Assignment\n",yytext);}
-"("			                     {printf("%s:Open parantheses\n",yytext);}
-")"			                     {printf("%s:Close parantheses\n",yytext);}
-"["                          {printf("%s:Open square brackets\n",yytext);}
-"]"                          {printf("%s:Close curly brackets\n",yytext);}
-"-"			                     {printf("%s:Minus operator\n",yytext);}
-"+"			                     {printf("%s:Plus operator\n",yytext);}
-"*"			                     {printf("%s:Star operator\n",yytext);}
-"/"		                       {printf("%s:Forward slash\n",yytext);}
-"%"			                     {printf("%s:Modulo operator\n",yytext);}
-"<"			                     {printf("%s:Less than operator\n",yytext);}
-">"			                     {printf("%s:Greater than operator\n",yytext);}
-.                            {printf("%s:Illegal charcter\n",yytext);}
+\"[^\"\n]*$                     {printf("Line %3d: Illegal string %s\n",yylineno,yytext);}
+{digit}+({letter}|_)+	        {printf("Line %3d: Illegal identifier name %s\n",yylineno,yytext);}
+\n                              {yylineno++;} 
+"--"			                {insert( hash_table,yytext,DECREMENT);}
+"++"			                {insert( hash_table,yytext,INCREMENT);}
+"->"			                {insert( hash_table,yytext,PTR_SELECT);}
+"&&"			                {insert( hash_table,yytext,LOGICAL_AND);}
+"||"			                {insert( hash_table,yytext,LOGICAL_OR);}
+"<="			                {insert( hash_table,yytext,LS_THAN_EQ);}
+">="			                {insert( hash_table,yytext,GR_THAN_EQ);}
+"=="			                {insert( hash_table,yytext,EQ);}
+"!="		                    {insert( hash_table,yytext,NOT_EQ);}
+";"			                    {insert( hash_table,yytext,DELIMITER);}
+"{"                             {insert( hash_table,yytext,OPEN_BRACES);}
+"}"                             {insert( hash_table,yytext,CLOSE_BRACES);}
+","			                    {insert( hash_table,yytext,COMMA);}
+"="			                    {insert( hash_table,yytext,ASSIGN);}
+"("			                    {insert( hash_table,yytext,OPEN_PAR);}
+")"			                    {insert( hash_table,yytext,CLOSE_PAR);}
+"["                             {insert( hash_table,yytext,OPEN_SQ_BRKT);}
+"]"                             {insert( hash_table,yytext,CLOSE_SQ_BRKT);}
+"-"			                    {insert( hash_table,yytext,MINUS);}
+"+"			                    {insert( hash_table,yytext,PLUS);}
+"*"			                    {insert( hash_table,yytext,STAR);}
+"/"		                        {insert( hash_table,yytext,FW_SLASH);}
+"%"			                    {insert( hash_table,yytext,MODULO);}
+"<"			                    {insert( hash_table,yytext,LS_THAN);}
+">"			                    {insert( hash_table,yytext,GR_THAN);}
+.                               {printf("Line %3d: Illegal character %s\n",yylineno,yytext);}
 
 %%
 
 int main()
 {
   yyin=fopen("test-case-9.c","r");
+  hash_table=create_table();
   yylex();
+  display(hash_table);
 }
