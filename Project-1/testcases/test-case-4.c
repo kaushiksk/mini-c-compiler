@@ -8,12 +8,9 @@ Test Case 4
 Following errors must be detected
  - Invalid identifiers: 9y, total$
  - Invalid operator: @
- - Invalid escape characters \q \d should be detected
- - Invalid hexadecimal character g for int
- - Invalid character constant 'aa'
+ - Escaped quoted should be part of the string that is identified
  - Stray characters: `, @, -
-
-
+ 
 The output should display appropriate errors
 */
 
@@ -23,12 +20,9 @@ The output should display appropriate errors
 int main()
 {
   `
-  int a=0x0g, 54;
   @ -
-  char='x','aa';
+  short int b;
   int x, 9y, total$;
-  x = 10, y = 20;
-  x=x*3/2;
   total = x @ y;
   printf ("Total = %d \n \" ", total);
 }
