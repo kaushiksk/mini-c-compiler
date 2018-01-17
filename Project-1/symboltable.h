@@ -1,3 +1,17 @@
+/* 
+* Compiler Design Project 1 : Lexical Analyser
+*
+* File        : symboltable.h
+* Description : This file contains functions related to a hash organised symbol table. 
+*               The functions implemented are:
+*               create_table(), insert(), search, display() 
+*                  
+* Authors     : Karthik M - 15CO22, Kaushik S Kalmady - 15CO222
+* Date        : 17-1-2018
+*/
+
+
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,7 +23,7 @@
 /* struct to hold each entry */
 struct entry_s
 {
-	char* lexeme;
+	char* lexeme; 
 	int token_name;
 	struct entry_s* successor;
 };
@@ -19,14 +33,15 @@ typedef struct entry_s entry_t;
 /* Create a new hash_table. */
 entry_t** create_table()
 {
-	entry_t** hash_table_ptr = NULL;
+	entry_t** hash_table_ptr = NULL; // declare a pointer
 
-	/* Allocate pointers to the head nodes. */
+	/* Allocate memroy for a hashtable array of size HASH_TABLE_SIZE */
 	if( ( hash_table_ptr = malloc( sizeof( entry_t* ) * HASH_TABLE_SIZE ) ) == NULL )
     	return NULL;
 
 	int i;
 	
+	// Intitialise all entries as NULL
     for( i = 0; i < HASH_TABLE_SIZE; i++ )
 	{
 		hash_table_ptr[i] = NULL;
@@ -35,7 +50,7 @@ entry_t** create_table()
 	return hash_table_ptr;
 }
 
-/* Generate hash from a string. The value is then clamped to < size of table */
+/* Generate hash from a string. Then generate an index in [0, HASH_TABLE_SIZE) */
 uint32_t hash( char *lexeme )
 {
 	size_t i;
@@ -53,10 +68,10 @@ uint32_t hash( char *lexeme )
 	hash ^= ( hash >> 11 );
     hash += ( hash << 15 );
 
-	return hash % HASH_TABLE_SIZE;
+	return hash % HASH_TABLE_SIZE; // return an index in [0, HASH_TABLE_SIZE)
 }
 
-/* Create an entry. This will be called from the insert function */
+/* Create an entry for a lexeme, token pair. This will be called from the insert function */
 entry_t *create_entry( char *lexeme, int token_name )
 {
 	entry_t *newentry;
@@ -65,7 +80,7 @@ entry_t *create_entry( char *lexeme, int token_name )
 	if( ( newentry = malloc( sizeof( entry_t ) ) ) == NULL ) {
 		return NULL;
 	}
-	/* Copy lexeme to newentry location using strdup. Return NULL if it fails */
+	/* Copy lexeme to newentry location using strdup (string-duplicate). Return NULL if it fails */
 	if( ( newentry->lexeme = strdup( lexeme ) ) == NULL ) {
 		return NULL;
 	}
@@ -81,55 +96,59 @@ entry_t* search( entry_t** hash_table_ptr, char* lexeme )
 {
 	uint32_t idx = 0;
 	entry_t* myentry;
-
+    
+    // get the index of this lexeme as per the hash function
 	idx = hash( lexeme );
 
 	/* Traverse the linked list at this idx and see if lexeme exists */
 	myentry = hash_table_ptr[idx];
+	
 	while( myentry != NULL && strcmp( lexeme, myentry->lexeme ) != 0 )
 	{
 		myentry = myentry->successor;
 	}
 
-	if( myentry == NULL)
+	if(myentry == NULL) // lexeme is not found
 		return NULL;
 	
-	else
+	else // lexeme found
 		return myentry;
 
 }
+
 /* Insert an entry into a hash table. */
 void insert( entry_t** hash_table_ptr, char* lexeme, int token_name )
 {
-	if(search(hash_table_ptr,lexeme)!=NULL)
+	if( search( hash_table_ptr, lexeme ) != NULL) // If lexeme already exists, don't insert, return
 	    return;
 
 	uint32_t idx;
 	entry_t* newentry = NULL;
 	entry_t* head = NULL;
 
-	idx = hash( lexeme );
-	newentry = create_entry( lexeme, token_name );
+	idx = hash( lexeme ); // Get the index for this lexeme based on the hash function
+	newentry = create_entry( lexeme, token_name ); // Create an entry using the <lexeme, token> pair
 
-	if(newentry == NULL)
+	if(newentry == NULL) // In case there was some error while executing create_entry()
 	{
 		printf("Insert failed. New entry could not be created.");
 		exit(1);
 	}
 
-	head = hash_table_ptr[idx];
+	head = hash_table_ptr[idx]; // get the head entry at this index
 
-	if(head == NULL)
+	if(head == NULL) // This is the first lexeme that matches this hash index 
 	{
 		hash_table_ptr[idx] = newentry;
 	}
-	else
+	else // if not, add this entry to the head
 	{
 		newentry->successor = hash_table_ptr[idx];
-		hash_table_ptr[idx]= newentry;
+		hash_table_ptr[idx] = newentry;
 	}
 }
 
+// Traverse the hash table and print all the entries
 void display(entry_t** hash_table_ptr)
 {
 	int i;
@@ -138,14 +157,14 @@ void display(entry_t** hash_table_ptr)
     printf("\t < lexeme , token >\n");
     printf("==========================================\n");
 
-	for(i=0;i<HASH_TABLE_SIZE;i++)
+	for( i=0; i < HASH_TABLE_SIZE; i++)
 	{
-		traverser=hash_table_ptr[i];
+		traverser = hash_table_ptr[i];
 
-		while(traverser!=NULL)
+		while( traverser != NULL)
 		{
-			printf("< %-30s, %3d >\n",traverser->lexeme,traverser->token_name);
-			traverser=traverser->successor;
+			printf("< %-30s, %3d >\n", traverser->lexeme, traverser->token_name);
+			traverser = traverser->successor;
 		}
 	}
     printf("==========================================\n");

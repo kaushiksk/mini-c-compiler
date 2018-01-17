@@ -7,6 +7,7 @@
 
 entry_t** symbol_table;
 entry_t** constant_table;
+int cmnt_strt = 0;
 
 %}
 
@@ -24,6 +25,7 @@ hex [0-9a-f]
   /* Keywords*/
 "int"                             {insert( symbol_table,yytext,INT);}
 "long"                            {insert( symbol_table,yytext,LONG);}
+"long long"                            {insert( symbol_table,yytext,LONG_LONG);}
 "short"                           {insert( symbol_table,yytext,SHORT);}
 "signed"                          {insert( symbol_table,yytext,SIGNED);}
 "unsigned"                        {insert( symbol_table,yytext,UNSIGNED);}
@@ -33,23 +35,23 @@ hex [0-9a-f]
 "if"                              {insert( symbol_table,yytext,IF);}
 "else"                            {insert( symbol_table,yytext,ELSE);}
 "return"                          {insert( symbol_table,yytext,RETURN);}
-"char"                            {insert( symbol_table,yytext,CHAR);}
 
 {identifier}                      {insert( symbol_table,yytext,IDENTIFIER);}
 {ws}                              ;
-[+-]?0[xX]{hex}+[lLuU]?           {insert( constant_table,yytext,HEX_CONSTANT);}
-[+-]?{digit}+[lLuU]?              {insert( constant_table,yytext,DEC_CONSTANT);}
-"/*"                              {BEGIN CMNT;}
+[+\-]?[0][x|X]{hex}+[lLuU]?        {insert( constant_table,yytext,HEX_CONSTANT);}
+[+\-]?{digit}+[lLuU]?              {insert( constant_table,yytext,DEC_CONSTANT);}
+"/*"                              {cmnt_strt = yylineno; BEGIN CMNT;}
 <CMNT>.|{ws}                      ;
 <CMNT>\n                          {yylineno++;}
 <CMNT>"*/"                        {BEGIN INITIAL;}
 <CMNT>"/*"                        {printf("Line %3d: Nested comments are not valid!\n",yylineno);}
+<CMNT><<EOF>>                     {printf("Line %3d: Unterminated comment\n", cmnt_strt); yyterminate();}
 ^"#include"                       {BEGIN PREPROC;}
-<PREPROC>"<"[^>\n]+">"       {insert( symbol_table,yytext,HEADER_FILE);}
+<PREPROC>"<"[^>\n]+">"            {insert( symbol_table,yytext,HEADER_FILE);}
 <PREPROC>{ws}                       ;
 <PREPROC>\"[^"\n]+\"              {insert( symbol_table,yytext,HEADER_FILE);}
 <PREPROC>\n                       {yylineno++; BEGIN INITIAL;}
-<PREPROC>.                       {printf("Line %3d: Illegal header file %s\n",yylineno,yytext);}
+<PREPROC>.                        {printf("Line %3d: Illegal header file format \n",yylineno); yyterminate();}
 "//".*                            ;
 
 \"[^\"\n]*\"     {
@@ -63,7 +65,7 @@ hex [0-9a-f]
   insert( constant_table,yytext,STRING);
  }
 
-\"[^\"\n]*$                     {printf("Line %3d: Illegal string %s\n",yylineno,yytext);}
+\"[^\"\n]*$                     {printf("Line %3d: Unterminated string %s\n",yylineno,yytext);}
 {digit}+({letter}|_)+	        {printf("Line %3d: Illegal identifier name %s\n",yylineno,yytext);}
 \n                              {yylineno++;}
 "--"			                {insert( symbol_table,yytext,DECREMENT);}
@@ -97,11 +99,12 @@ hex [0-9a-f]
 
 int main()
 {
-  yyin=fopen("test-case-5.c","r");
+  yyin=fopen("testcases/test-case-5.c","r");
   symbol_table=create_table();
   constant_table=create_table();
   yylex();
+  printf("\n\tSymbol table\n");
   display(symbol_table);
-  printf("\n\n\n");
+  printf("\n\n\tConstants Table\n");
   display(constant_table);
 }
