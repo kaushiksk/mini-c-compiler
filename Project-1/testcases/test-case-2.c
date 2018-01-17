@@ -1,10 +1,9 @@
-/* 
+/*
 Karthik M - 15CO221
 Kaushik S Kalmady - 15CO222
 Compiler Design Project 1
 
 Test Case 2
- - Test for invalid comment tags (*/ instead of /*)
  - Test for multi-line comment that doesn't end till EOF
 
 The output in lex should print as error message when the comment does not terminate
@@ -16,11 +15,10 @@ It should remove the comments that terminate
 void main(){
 
 	// This is fine
-	/* This as well 
+	/* This as well
 	like we know */
-	
-	*/ This is invalid */
-	/* This is not fine since 
+
+	/* This is not fine since
 	this comment has to end somewhere
 
 	return 0;

@@ -5,13 +5,14 @@
 #include "symboltable.h"
 #include "tokens.h"
 
-entry_t** hash_table;
+entry_t** symbol_table;
+entry_t** constant_table;
 
 %}
 
 letter [a-zA-Z]
 digit [0-9]
-ws [ \t]+
+ws  [ \t\r\f\v]+
 identifier (_|{letter})({letter}|{digit}|_){0,31}
 hex [0-9a-f]
 
@@ -21,32 +22,34 @@ hex [0-9a-f]
 
 %%
   /* Keywords*/
-"int"                             {insert( hash_table,yytext,INT);}
-"long"                            {insert( hash_table,yytext,LONG);}
-"short"                           {insert( hash_table,yytext,SHORT);}
-"signed"                          {insert( hash_table,yytext,SIGNED);}
-"unsigned"                        {insert( hash_table,yytext,UNSIGNED);}
-"for"                             {insert( hash_table,yytext,FOR);}
-"break"                           {insert( hash_table,yytext,BREAK);}
-"continue"                        {insert( hash_table,yytext,CONTINUE);}
-"if"                              {insert( hash_table,yytext,IF);}
-"else"                            {insert( hash_table,yytext,ELSE);}
-"return"                          {insert( hash_table,yytext,RETURN);}
-"char"                            {insert( hash_table,yytext,CHAR);}
+"int"                             {insert( symbol_table,yytext,INT);}
+"long"                            {insert( symbol_table,yytext,LONG);}
+"short"                           {insert( symbol_table,yytext,SHORT);}
+"signed"                          {insert( symbol_table,yytext,SIGNED);}
+"unsigned"                        {insert( symbol_table,yytext,UNSIGNED);}
+"for"                             {insert( symbol_table,yytext,FOR);}
+"break"                           {insert( symbol_table,yytext,BREAK);}
+"continue"                        {insert( symbol_table,yytext,CONTINUE);}
+"if"                              {insert( symbol_table,yytext,IF);}
+"else"                            {insert( symbol_table,yytext,ELSE);}
+"return"                          {insert( symbol_table,yytext,RETURN);}
+"char"                            {insert( symbol_table,yytext,CHAR);}
 
-{identifier}                      {insert( hash_table,yytext,IDENTIFIER);}
+{identifier}                      {insert( symbol_table,yytext,IDENTIFIER);}
 {ws}                              ;
-[+-]?0[xX]{hex}+[lLuU]?           {insert( hash_table,yytext,HEX_CONSTANT);}
-[+-]?{digit}+[lLuU]?              {insert( hash_table,yytext,DEC_CONSTANT);}
+[+-]?0[xX]{hex}+[lLuU]?           {insert( constant_table,yytext,HEX_CONSTANT);}
+[+-]?{digit}+[lLuU]?              {insert( constant_table,yytext,DEC_CONSTANT);}
 "/*"                              {BEGIN CMNT;}
-<CMNT>.|\n                        ;
+<CMNT>.|{ws}                      ;
+<CMNT>\n                          {yylineno++;}
 <CMNT>"*/"                        {BEGIN INITIAL;}
 <CMNT>"/*"                        {printf("Line %3d: Nested comments are not valid!\n",yylineno);}
 ^"#include"                       {BEGIN PREPROC;}
-<PREPROC>{ws}?"<"[^>\n]+">"       {insert( hash_table,yytext,HEADER_FILE);}
-<PREPROC>{ws}?\"[^"\n]+\"         {insert( hash_table,yytext,HEADER_FILE);}
-<PREPROC>\n                       {BEGIN INITIAL;}
-<PREPROC>.*                       {printf("Line %3d: Illegal header file %s!\n",yylineno,yytext);}
+<PREPROC>"<"[^>\n]+">"       {insert( symbol_table,yytext,HEADER_FILE);}
+<PREPROC>{ws}                       ;
+<PREPROC>\"[^"\n]+\"              {insert( symbol_table,yytext,HEADER_FILE);}
+<PREPROC>\n                       {yylineno++; BEGIN INITIAL;}
+<PREPROC>.                       {printf("Line %3d: Illegal header file %s\n",yylineno,yytext);}
 "//".*                            ;
 
 \"[^\"\n]*\"     {
@@ -57,45 +60,48 @@ hex [0-9a-f]
     yymore();
   }
   else
-  insert( hash_table,yytext,STRING);
+  insert( constant_table,yytext,STRING);
  }
 
 \"[^\"\n]*$                     {printf("Line %3d: Illegal string %s\n",yylineno,yytext);}
 {digit}+({letter}|_)+	        {printf("Line %3d: Illegal identifier name %s\n",yylineno,yytext);}
-\n                              {yylineno++;} 
-"--"			                {insert( hash_table,yytext,DECREMENT);}
-"++"			                {insert( hash_table,yytext,INCREMENT);}
-"->"			                {insert( hash_table,yytext,PTR_SELECT);}
-"&&"			                {insert( hash_table,yytext,LOGICAL_AND);}
-"||"			                {insert( hash_table,yytext,LOGICAL_OR);}
-"<="			                {insert( hash_table,yytext,LS_THAN_EQ);}
-">="			                {insert( hash_table,yytext,GR_THAN_EQ);}
-"=="			                {insert( hash_table,yytext,EQ);}
-"!="		                    {insert( hash_table,yytext,NOT_EQ);}
-";"			                    {insert( hash_table,yytext,DELIMITER);}
-"{"                             {insert( hash_table,yytext,OPEN_BRACES);}
-"}"                             {insert( hash_table,yytext,CLOSE_BRACES);}
-","			                    {insert( hash_table,yytext,COMMA);}
-"="			                    {insert( hash_table,yytext,ASSIGN);}
-"("			                    {insert( hash_table,yytext,OPEN_PAR);}
-")"			                    {insert( hash_table,yytext,CLOSE_PAR);}
-"["                             {insert( hash_table,yytext,OPEN_SQ_BRKT);}
-"]"                             {insert( hash_table,yytext,CLOSE_SQ_BRKT);}
-"-"			                    {insert( hash_table,yytext,MINUS);}
-"+"			                    {insert( hash_table,yytext,PLUS);}
-"*"			                    {insert( hash_table,yytext,STAR);}
-"/"		                        {insert( hash_table,yytext,FW_SLASH);}
-"%"			                    {insert( hash_table,yytext,MODULO);}
-"<"			                    {insert( hash_table,yytext,LS_THAN);}
-">"			                    {insert( hash_table,yytext,GR_THAN);}
+\n                              {yylineno++;}
+"--"			                {insert( symbol_table,yytext,DECREMENT);}
+"++"			                {insert( symbol_table,yytext,INCREMENT);}
+"->"			                {insert( symbol_table,yytext,PTR_SELECT);}
+"&&"			                {insert( symbol_table,yytext,LOGICAL_AND);}
+"||"			                {insert( symbol_table,yytext,LOGICAL_OR);}
+"<="			                {insert( symbol_table,yytext,LS_THAN_EQ);}
+">="			                {insert( symbol_table,yytext,GR_THAN_EQ);}
+"=="			                {insert( symbol_table,yytext,EQ);}
+"!="		                    {insert( symbol_table,yytext,NOT_EQ);}
+";"			                    {insert( symbol_table,yytext,DELIMITER);}
+"{"                             {insert( symbol_table,yytext,OPEN_BRACES);}
+"}"                             {insert( symbol_table,yytext,CLOSE_BRACES);}
+","			                    {insert( symbol_table,yytext,COMMA);}
+"="			                    {insert( symbol_table,yytext,ASSIGN);}
+"("			                    {insert( symbol_table,yytext,OPEN_PAR);}
+")"			                    {insert( symbol_table,yytext,CLOSE_PAR);}
+"["                             {insert( symbol_table,yytext,OPEN_SQ_BRKT);}
+"]"                             {insert( symbol_table,yytext,CLOSE_SQ_BRKT);}
+"-"			                    {insert( symbol_table,yytext,MINUS);}
+"+"			                    {insert( symbol_table,yytext,PLUS);}
+"*"			                    {insert( symbol_table,yytext,STAR);}
+"/"		                        {insert( symbol_table,yytext,FW_SLASH);}
+"%"			                    {insert( symbol_table,yytext,MODULO);}
+"<"			                    {insert( symbol_table,yytext,LS_THAN);}
+">"			                    {insert( symbol_table,yytext,GR_THAN);}
 .                               {printf("Line %3d: Illegal character %s\n",yylineno,yytext);}
 
 %%
 
 int main()
 {
-  yyin=fopen("test-case-9.c","r");
-  hash_table=create_table();
+  yyin=fopen("test-case-5.c","r");
+  symbol_table=create_table();
+  constant_table=create_table();
   yylex();
-  display(hash_table);
+  display(symbol_table);
+  printf("\n\n\n");
+  display(constant_table);
 }

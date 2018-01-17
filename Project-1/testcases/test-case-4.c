@@ -1,4 +1,4 @@
-/* 
+/*
 Karthik M - 15CO221
 Kaushik S Kalmady - 15CO222
 Compiler Design Project 1
@@ -30,8 +30,8 @@ int main()
   x = 10, y = 20;
   x=x*3/2;
   total = x @ y;
-  printf ("Total = %d \n \q \d ", total);
+  printf ("Total = %d \n \" ", total);
 }
 
 // Errors:
-// 
+//
