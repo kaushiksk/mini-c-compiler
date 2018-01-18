@@ -36,10 +36,13 @@ hex [0-9a-f]
 "else"                            {printf("\t%-30s : %3d\n",yytext,ELSE);}
 "return"                          {printf("\t%-30s : %3d\n",yytext,RETURN);}
 
-{identifier}                      {insert( symbol_table,yytext,IDENTIFIER );}
+{identifier}                      {printf("\t%-30s : %3d\n", yytext,IDENTIFIER);
+                                  insert( symbol_table,yytext,IDENTIFIER );}
 {ws}                              ;
-[+\-]?[0][x|X]{hex}+[lLuU]?        {insert( constant_table,yytext,HEX_CONSTANT);}
-[+\-]?{digit}+[lLuU]?              {insert( constant_table,yytext,DEC_CONSTANT);}
+[+\-]?[0][x|X]{hex}+[lLuU]?        {printf("\t%-30s : %3d\n", yytext,HEX_CONSTANT);
+									insert( constant_table,yytext,HEX_CONSTANT);}
+[+\-]?{digit}+[lLuU]?              {printf("\t%-30s : %3d\n", yytext,DEC_CONSTANT);
+									insert( constant_table,yytext,DEC_CONSTANT);}
 "/*"                              {cmnt_strt = yylineno; BEGIN CMNT;}
 <CMNT>.|{ws}                      ;
 <CMNT>\n                          {yylineno++;}
@@ -47,11 +50,11 @@ hex [0-9a-f]
 <CMNT>"/*"                        {printf("Line %3d: Nested comments are not valid!\n",yylineno);}
 <CMNT><<EOF>>                     {printf("Line %3d: Unterminated comment\n", cmnt_strt); yyterminate();}
 ^"#include"                       {BEGIN PREPROC;}
-<PREPROC>"<"[^>\n]+">"            {printf("\t%-30s : %3d\n",yytext,HEADER_FILE);}
+<PREPROC>"<"[^<>\n]+">"            {printf("\t%-30s : %3d\n",yytext,HEADER_FILE);}
 <PREPROC>{ws}                       ;
 <PREPROC>\"[^"\n]+\"              {printf("\t%-30s : %3d\n",yytext,HEADER_FILE);}
 <PREPROC>\n                       {yylineno++; BEGIN INITIAL;}
-<PREPROC>.                        {printf("Line %3d: Illegal header file format \n",yylineno); yyterminate();}
+<PREPROC>.                        {printf("Line %3d: Illegal header file format \n",yylineno);}
 "//".*                            ;
 
 \"[^\"\n]*\"     {
@@ -99,12 +102,13 @@ hex [0-9a-f]
 
 int main()
 {
-  yyin=fopen("testcases/test-case-4.c","r");
+  yyin=fopen("testcases/test-case-5.c","r");
   symbol_table=create_table();
   constant_table=create_table();
   yylex();
-  printf("\n\tSymbol table\n");
+  printf("\n\tSymbol table");
   display(symbol_table);
-  printf("\n\n\tConstants Table\n");
+  printf("\n\tConstants Table");
   display(constant_table);
+  printf("NOTE: Please refer tokens.h for token meanings\n");
 }

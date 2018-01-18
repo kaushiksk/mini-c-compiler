@@ -168,5 +168,5 @@ void display(entry_t** hash_table_ptr)
 		}
 	}
     printf("==========================================\n");
-    printf("NOTE: Please refer tokens.h for token meanings\n");
+   
 }
