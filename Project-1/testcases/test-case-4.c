@@ -26,6 +26,3 @@ int main()
   total = x @ y;
   printf ("Total = %d \n \" ", total);
 }
-
-// Errors:
-//
