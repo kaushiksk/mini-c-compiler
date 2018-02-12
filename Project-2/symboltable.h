@@ -1,11 +1,11 @@
-/* 
+/*
 * Compiler Design Project 1 : Lexical Analyser
 *
 * File        : symboltable.h
-* Description : This file contains functions related to a hash organised symbol table. 
+* Description : This file contains functions related to a hash organised symbol table.
 *               The functions implemented are:
-*               create_table(), insert(), search, display() 
-*                  
+*               create_table(), insert(), search, display()
+*
 * Authors     : Karthik M - 15CO22, Kaushik S Kalmady - 15CO222
 * Date        : 17-1-2018
 */
@@ -23,7 +23,7 @@
 /* struct to hold each entry */
 struct entry_s
 {
-	char* lexeme; 
+	char* lexeme;
 	int value;
 	struct entry_s* successor;
 };
@@ -40,7 +40,7 @@ entry_t** create_table()
     	return NULL;
 
 	int i;
-	
+
 	// Intitialise all entries as NULL
     for( i = 0; i < HASH_TABLE_SIZE; i++ )
 	{
@@ -96,13 +96,13 @@ entry_t* search( entry_t** hash_table_ptr, char* lexeme )
 {
 	uint32_t idx = 0;
 	entry_t* myentry;
-    
+
     // get the index of this lexeme as per the hash function
 	idx = hash( lexeme );
 
 	/* Traverse the linked list at this idx and see if lexeme exists */
 	myentry = hash_table_ptr[idx];
-	
+
 	while( myentry != NULL && strcmp( lexeme, myentry->lexeme ) != 0 )
 	{
 		myentry = myentry->successor;
@@ -110,7 +110,7 @@ entry_t* search( entry_t** hash_table_ptr, char* lexeme )
 
 	if(myentry == NULL) // lexeme is not found
 		return NULL;
-	
+
 	else // lexeme found
 		return myentry;
 
@@ -118,7 +118,7 @@ entry_t* search( entry_t** hash_table_ptr, char* lexeme )
 
 /* Insert an entry into a hash table. */
 entry_t* insert( entry_t** hash_table_ptr, char* lexeme, int value )
-{	
+{
 	entry_t* finder = search( hash_table_ptr, lexeme );
 	if( finder != NULL) // If lexeme already exists, don't insert, return
 	    return finder ;
@@ -138,7 +138,7 @@ entry_t* insert( entry_t** hash_table_ptr, char* lexeme, int value )
 
 	head = hash_table_ptr[idx]; // get the head entry at this index
 
-	if(head == NULL) // This is the first lexeme that matches this hash index 
+	if(head == NULL) // This is the first lexeme that matches this hash index
 	{
 		hash_table_ptr[idx] = newentry;
 	}
@@ -170,7 +170,5 @@ void display(entry_t** hash_table_ptr)
 		}
 	}
     printf("==========================================\n");
-   
+
 }
-
-

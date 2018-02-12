@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "y.tab.h"
 
+
 int cmnt_strt = 0;
 
 %}
@@ -27,18 +28,17 @@ hex [0-9a-f]
 "signed"                          {return SIGNED;}
 "unsigned"                        {return UNSIGNED;}
 "for"                             {return FOR;}
+"while"                           {return WHILE;}
 "break"                           {return BREAK;}
 "continue"                        {return CONTINUE;}
 "if"                              {return IF;}
 "else"                            {return ELSE;}
 "return"                          {return RETURN;}
 
-{identifier}                      {return  IDENTIFIER; yylval.entry = insert(
-symbol_table, yytext, IDENTIFIER );}
+{identifier}                      {return  IDENTIFIER; yylval.entry = insert(symbol_table, yytext, IDENTIFIER );}
 {ws}                              ;
 [+\-]?[0][x|X]{hex}+[lLuU]?        {return  HEX_CONSTANT; yylval.dval = (int)strtol(yytext, NULL, 16);}
-[+\-]?{digit}+[lLuU]?              {return  DEC_CONSTANT; yylval.dval =
-atoi(yytext);}
+[+\-]?{digit}+[lLuU]?              {return  DEC_CONSTANT; yylval.dval = atoi(yytext);}
 
 "/*"                              {cmnt_strt = yylineno; BEGIN CMNT;}
 <CMNT>.|{ws}                      ;
@@ -74,47 +74,28 @@ atoi(yytext);}
 "--"			                {return DECREMENT;}
 "++"			                {return INCREMENT;}
 "->"			                {return PTR_SELECT;}
+"+="                      {return ADD_ASSIGN;}
+"-="                      {return SUB_ASSIGN;}
+"*="                      {return MUL_ASSIGN;}
+"/="                      {return DIV_ASSIGN;}
+"%="                      {return MOD_ASSIGN;}
+
 
 "&&"			                {return LOGICAL_AND;}
 "||"			                {return LOGICAL_OR;}
 "<="			                {return LS_EQ;}
 ">="			                {return GR_EQ;}
 "=="			                {return EQ;}
-"!="		                    {return NOT_EQ;}
+"!="		                  {return NOT_EQ;}
 
-";"     { return(';'); }
-"["    { return('['); }
-"]"    { return(']'); }
-"{"    { return('{'); }
-"}"    { return('}'); }
-"("     { return('('); }
-")"     { return(')'); }
-","     { return(','); }
-":"     { return(':'); }
-"="     { return('='); }
-
-"+"     { return('+'); }
-"-"     { return('-'); }
-"*"     { return('*'); }
-"/"     { return('/'); }
-"%"     { return('%'); }
-"<"     { return('<'); }
-">"     { return('>'); }
-"^"     { return('^'); }
-"|"     { return('|'); }
-"?"     { return('?'); }
-"."     { return('.'); }
-"~"     { return('~'); }
-"&"     { return('&'); }
-"!"     { return('!'); }
-.                               {printf("Line %3d: Illegal character %s\n",yylineno,yytext);}
+.                         {return yytext[0];}
 
 %%
 /*
 int main()
 {
   yyin=fopen("testcases/test-case-5.c","r");
-  
+
   constant_table=create_table();
   yylex();
   printf("\n\tSymbol table");
