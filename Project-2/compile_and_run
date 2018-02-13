@@ -1,5 +1,4 @@
 #!/bin/bash
 lex lexl.l
 yacc -d parser.y -v
-gcc -w y.tab.c -ly -ll
-./a.out test
+gcc -w -g y.tab.c -ly -ll

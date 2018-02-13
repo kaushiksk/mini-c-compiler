@@ -24,7 +24,8 @@
 struct entry_s
 {
 	char* lexeme;
-	int value;
+	double value;
+	int data_type;
 	struct entry_s* successor;
 };
 
@@ -155,9 +156,9 @@ void display(entry_t** hash_table_ptr)
 {
 	int i;
 	entry_t* traverser;
-    printf("\n==========================================\n");
-    printf("\t < lexeme , value>\n");
-    printf("==========================================\n");
+    printf("\n====================================================\n");
+    printf(" %-20s %-20s %-20s\n","lexeme","value","data-type");
+    printf("====================================================\n");
 
 	for( i=0; i < HASH_TABLE_SIZE; i++)
 	{
@@ -165,10 +166,10 @@ void display(entry_t** hash_table_ptr)
 
 		while( traverser != NULL)
 		{
-			printf("< %-30s, %3d >\n", traverser->lexeme, traverser->value);
+			printf(" %-20s %-20d %-20d \n", traverser->lexeme, (int)traverser->value, traverser->data_type);
 			traverser = traverser->successor;
 		}
 	}
-    printf("==========================================\n");
+    printf("====================================================\n");
 
 }

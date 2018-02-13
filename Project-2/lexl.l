@@ -2,9 +2,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <limits.h>
+/* #include "symboltable.h" */
 #include "y.tab.h"
 
-
+/* entry_t** symbol_table; */
+/* entry_t** constant_table; */
 int cmnt_strt = 0;
 
 %}
@@ -35,10 +38,10 @@ hex [0-9a-f]
 "else"                            {return ELSE;}
 "return"                          {return RETURN;}
 
-{identifier}                      {return  IDENTIFIER; yylval.entry = insert(symbol_table, yytext, IDENTIFIER );}
+{identifier}                      {yylval.entry = insert(symbol_table, yytext, INT_MAX); return  IDENTIFIER;}
 {ws}                              ;
-[+\-]?[0][x|X]{hex}+[lLuU]?        {return  HEX_CONSTANT; yylval.dval = (int)strtol(yytext, NULL, 16);}
-[+\-]?{digit}+[lLuU]?              {return  DEC_CONSTANT; yylval.dval = atoi(yytext);}
+[+\-]?[0][x|X]{hex}+[lLuU]?        { yylval.dval = (int)strtol(yytext, NULL, 16); return  HEX_CONSTANT;}
+[+\-]?{digit}+[lLuU]?              {yylval.dval = atoi(yytext); return  DEC_CONSTANT;}
 
 "/*"                              {cmnt_strt = yylineno; BEGIN CMNT;}
 <CMNT>.|{ws}                      ;
@@ -62,7 +65,7 @@ hex [0-9a-f]
     yymore();
   }
   else{
-  insert( constant_table, yytext, STRING);
+  insert( constant_table, yytext, INT_MAX);
   return STRING;
   }
  }
@@ -73,7 +76,7 @@ hex [0-9a-f]
 
 "--"			                {return DECREMENT;}
 "++"			                {return INCREMENT;}
-"->"			                {return PTR_SELECT;}
+ /* "->"			                {return PTR_SELECT;} */
 "+="                      {return ADD_ASSIGN;}
 "-="                      {return SUB_ASSIGN;}
 "*="                      {return MUL_ASSIGN;}
@@ -94,13 +97,17 @@ hex [0-9a-f]
 /*
 int main()
 {
-  yyin=fopen("testcases/test-case-5.c","r");
+  yyin=fopen("test2.c","r");
 
   constant_table=create_table();
+  symbol_table = create_table();
+
   yylex();
+
   printf("\n\tSymbol table");
   display(symbol_table);
   printf("\n\tConstants Table");
   display(constant_table);
+
   printf("NOTE: Please refer tokens.h for token meanings\n");
-}*/
+} */
