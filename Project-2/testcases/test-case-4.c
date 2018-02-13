@@ -10,20 +10,18 @@ Following errors must be detected
  - Invalid operator: @
  - Escaped quoted should be part of the string that is identified
  - Stray characters: `, @, -
- 
+
 The output should display appropriate errors
 */
 
-#include<stdio.h>
-#include<stdlib.h>
 
 int main()
 {
   int x, y;
   long long int total, diff;
-  int *ptr;	
+  int *ptr;
   int a = 86;
-  
+
   if (a > 90)
   {
 	  printf ("Grade is AA");
@@ -36,7 +34,7 @@ int main()
   {
 	  printf ("Grade is BB");
   }
-      
+
   x = -10, y = 20;
   x=x*3/2;
   total = x + y;
