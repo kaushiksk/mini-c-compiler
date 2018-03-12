@@ -28,7 +28,7 @@ struct entry_s
 	double value;
 	int data_type;
 	int* parameter_list; // for functions
-	int array_dim;
+	int array_dimension;
 	struct entry_s* successor;
 };
 
@@ -37,21 +37,21 @@ typedef struct entry_s entry_t;
 /* Wrapper for symbol table with pointer to symbol table of parent scope */
 struct table_s
 {
-	entry_t** cur_scope_symboltable;
+	entry_t** symbol_table;
 	int parent;
 };
 
 typedef struct table_s table_t;
 
-table_t st_list[NUM_TABLES];
+extern table_t symbol_table_list[NUM_TABLES];
 
 // Initialise all symbol tables to NULL
 // Add in YACC
 // int i;
 // for(i=0; i<NUM_TABLES;i++)
 // {
-// 	st_list[i].cur_scope_symboltable = NULL;
-// 	st_list[i].parent = -1;
+// 	symbol_table_list[i].symbol_table = NULL;
+// 	symbol_table_list[i].parent = -1;
 // }
 
 /* Create a new hash_table. */
@@ -78,19 +78,23 @@ entry_t** create_table()
 "{" current_scope = create_new_scope()
 
 
-"}" current_scope = st_list[current_scope].parent;
+"}" current_scope = symbol_table_list[current_scope].parent;
 */
 
 int create_new_scope()
 {
 	table_index++;
 
-	st_list[table_index].cur_scope_symboltable = create_table();
-	st_list[table_index].parent = current_scope;
+	symbol_table_list[table_index].symbol_table = create_table();
+	symbol_table_list[table_index].parent = current_scope;
 
 	return table_index;
 }
 
+int exit_scope()
+{
+	return symbol_table_list[current_scope].parent;
+}
 /* Generate hash from a string. Then generate an index in [0, HASH_TABLE_SIZE) */
 uint32_t hash( char *lexeme )
 {
@@ -129,11 +133,12 @@ entry_t *create_entry( char *lexeme, int value )
 	newentry->value = value;
 	newentry->successor = NULL;
 	newentry->parameter_list = NULL;
+	newentry->array_dimension = -1;
 	return newentry;
 }
 
 /* Search for an entry given a lexeme. Return a pointer to the entry of the lexeme exists, else return NULL */
-entry_t* search( entry_t** hash_table_ptr, char* lexeme )
+entry_t* search(entry_t** hash_table_ptr, char* lexeme)
 {
 	uint32_t idx = 0;
 	entry_t* myentry;
@@ -158,34 +163,31 @@ entry_t* search( entry_t** hash_table_ptr, char* lexeme )
 }
 
 // Search recursively in every parent scope for lexeme
-entry_t* search_rec(char* lexeme)
+entry_t* search_recursive(char* lexeme)
 {
 	int idx = current_scope;
 	entry_t* finder = NULL;
-	entry_t** cur = NULL;
 
-	while(idx != -1){
-		cur = st_list[idx].cur_scope_symboltable;
-		finder = search(cur, lexeme);
+	while(idx != -1)
+	{
+		finder = search(symbol_table_list[idx].symbol_table, lexeme);
 
 		if(finder != NULL)
 			return finder;
 
-		idx = st_list[idx].parent;
+		idx = symbol_table_list[idx].parent;
 	}
-	// finder is still NULL, variable hasn't been declared anywhere
-	printf("Variable %s undeclared\n", lexeme);
-	exit(0);
+
+	return finder;
 }
 /* Insert an entry into a hash table. */
 entry_t* insert( entry_t** hash_table_ptr, char* lexeme, int value)
 {
 	// Make sure you pass the current scope symbol table here
 	entry_t* finder = search( hash_table_ptr, lexeme );
-	if( finder != NULL) // If lexeme already exists, don't insert, return
+	if( finder != NULL) // If lexeme already exists, don't insert, return NULL
 	{
-		printf("Redeclaration of variable %s\n", lexeme);
-		exit(0);
+		return NULL; //capture this is callee code and do necessary error handling
 	}
 
 	uint32_t idx;
@@ -216,7 +218,12 @@ entry_t* insert( entry_t** hash_table_ptr, char* lexeme, int value)
 }
 
 // This should be called after function definition/declaration
-void fill_paramlist(entry_t* entry, int* list, int n)
+void fill_array_dimension(entry_t* entry, int dimension)
+{
+	entry->array_dimension = dimension;
+}
+
+void fill_parameter_list(entry_t* entry, int* list, int n)
 {
 	entry->parameter_list = (int *)malloc(n*sizeof(int));
 
@@ -226,14 +233,19 @@ void fill_paramlist(entry_t* entry, int* list, int n)
 }
 
 // This is called after a function call to check if param list match
-int check_params(entry_t* entry, int* temp_params)
+int check_parameter_list(entry_t* entry, int* list)
 {
 	int* parameter_list = entry->parameter_list;
 	int n = sizeof(parameter_list) / sizeof(int);
+	int m = sizeof(list) / sizeof(int);
+	if(m != n)
+	{
+		return -1;
+	}
 	int i;
 	for(i=0; i<n; i++)
 	{
-		if(temp_params[i] != parameter_list[i])
+		if(list[i] != parameter_list[i])
 			return 0;
 	}
 	return 1;

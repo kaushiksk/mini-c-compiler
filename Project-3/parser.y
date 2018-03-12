@@ -3,22 +3,27 @@
 	#include <stdio.h>
 	#include "symboltable.h"
 
-	entry_t** symbol_table;
+	#define SYMBOL_TABLE symbol_table_list[current_scope].symbol_table
+
   entry_t** constant_table;
 
-	double Evaluate (double lhs_value,int assign_type,double rhs_value);
 	int current_dtype;
 	int yyerror(char *msg);
+
+	table_t symbol_table_list[NUM_TABLES];
+
+	int is_declaration = 0;
+	int is_loop = 0;
+	int is_func = 0;
+	int func_type;
 %}
 
 %union
 {
-	double dval;
-	entry_t* entry;
-	int ival;
+
 }
 
-%token <entry> IDENTIFIER
+%token <entry> identifier
 
  /* Constants */
 %token <dval> DEC_CONSTANT HEX_CONSTANT
@@ -44,7 +49,7 @@
 %type <dval> unary_expr
 %type <dval> arithmetic_expr
 %type <dval> assignment_expr
-%type <entry> lhs
+%type <entry> identifier
 %type <ival> assign_op
 
 %start starter
@@ -76,8 +81,8 @@ builder: function|
        declaration;
 
  /* This is how a function looks like */
-function: type IDENTIFIER '(' argument_list ')' compound_stmt;
-
+function: type {func_type = current_dtype;} identifier '(' argument_list ')' {is_func = 1;} compound_stmt {is_func = 0;}
+        ;
  /* Now we will define a grammar for how types can be specified */
 
 type :data_type pointer
@@ -115,7 +120,7 @@ arguments :arguments ',' arg
     ;
 
  /* Each arg is a TYPE ID pair */
-arg :type IDENTIFIER
+arg :type identifier
    ;
 
  /* Generic statement. Can be compound or a single statement */
@@ -124,7 +129,7 @@ stmt:compound_stmt
     ;
 
  /* The function body is covered in braces and has multiple statements. */
-compound_stmt :'{' statements '}'
+compound_stmt :'{' {current_scope = create_new_scope();} statements '}' {current_scope = exit_scope();}
     ;
 
 statements:statements stmt
@@ -137,13 +142,29 @@ single_stmt :if_block
     |while_block
     |declaration
     |function_call ';'
-		|RETURN ';'
-		|CONTINUE ';'
-		|BREAK ';'
-		|RETURN sub_expr ';'
+		|RETURN ';'								  {
+																	if(is_func)
+																	{
+																		if(func_type != VOID)
+																			yyerror("return type (VOID) does not match function type");
+																	}
+																  else yyerror("return statement not inside function definition");
+																}
+
+		|CONTINUE ';'							 {if(!is_loop) {yyerror("Illegal use of continue");}}
+		|BREAK ';'                 {if(!is_loop) {yyerror("Illegal use of break");}}
+
+		|RETURN sub_expr ';'			 {
+																	if(is_func)
+																	{
+																		if(func_type != $2)
+																			yyerror("return type does not match function type");
+																	}
+																	else yyerror("return statement not in function definition");
+															 }
     ;
 
-for_block:FOR '(' expression_stmt  expression_stmt ')' stmt
+for_block:FOR  '(' expression_stmt  expression_stmt ')' {is_loop = 1;} stmt {is_loop = 0;}
     |FOR '(' expression_stmt expression_stmt expression ')' stmt
     ;
 
@@ -151,10 +172,10 @@ if_block:IF '(' expression ')' stmt %prec LOWER_THAN_ELSE
 				|IF '(' expression ')' stmt ELSE stmt
     ;
 
-while_block: WHILE '(' expression	')' stmt
+while_block: WHILE '(' expression	')' {is_loop = 1;} stmt {is_loop = 0;}
 		;
 
-declaration:type declaration_list ';'
+declaration:type {is_declaration = 1;} declaration_list ';' {is_declaration = 0;}
 					 |declaration_list ';'
 					 | unary_expr ';'
 
@@ -162,7 +183,7 @@ declaration_list: declaration_list ',' sub_decl
 		|sub_decl;
 
 sub_decl: assignment_expr
-    |IDENTIFIER                     {$1 -> data_type = current_dtype;}
+    |identifier                     {$1 -> data_type = current_dtype;}
     |array_index
     /*|struct_block ';'*/
     ;
@@ -173,72 +194,82 @@ expression_stmt:expression ';'
     ;
 
 expression:
-    expression ',' sub_expr													{$$ = $1,$3;}
-    |sub_expr		                                    {$$ = $1;}
+    expression ',' sub_expr
+    |sub_expr
 		;
 
 sub_expr:
-    sub_expr '>' sub_expr											{$$ = ($1 > $3);}
-    |sub_expr '<' sub_expr											{$$ = ($1 < $3);}
-    |sub_expr EQ sub_expr												{$$ = ($1 == $3);}
-    |sub_expr NOT_EQ sub_expr                   {$$ = ($1 != $3);}
-    |sub_expr LS_EQ sub_expr                    {$$ = ($1 <= $3);}
-    |sub_expr GR_EQ sub_expr                    {$$ = ($1 >= $3);}
-		|sub_expr LOGICAL_AND sub_expr              {$$ = ($1 && $3);}
-		|sub_expr LOGICAL_OR sub_expr               {$$ = ($1 || $3);}
-		|'!' sub_expr                               {$$ = (!$2);}
-		|arithmetic_expr														{$$ = $1;}
-    |assignment_expr                            {$$ = $1;}
-		|unary_expr                                 {$$ = $1;}
-    /* |IDENTIFIER                                     {$$ = $1->value;}
-    |constant                                       {$$ = $1;} */
-		//|array_index
+    sub_expr '>' sub_expr
+    |sub_expr '<' sub_expr
+    |sub_expr EQ sub_expr
+    |sub_expr NOT_EQ sub_expr
+    |sub_expr LS_EQ sub_expr
+    |sub_expr GR_EQ sub_expr
+		|sub_expr LOGICAL_AND sub_expr
+		|sub_expr LOGICAL_OR sub_expr
+		|'!' sub_expr
+		|arithmetic_expr
+    |assignment_expr
+		|unary_expr
     ;
 
 
-assignment_expr :lhs assign_op arithmetic_expr     {$$ = $1->value = Evaluate($1->value,$2,$3);}
-    |lhs assign_op array_index                     {$$ = 0;}
-    |lhs assign_op function_call                   {$$ = 0;}
-		|lhs assign_op unary_expr                      {$$ = $1->value = Evaluate($1->value,$2,$3);}
-		|unary_expr assign_op unary_expr               {$$ = 0;}
+assignment_expr :identifier assign_op arithmetic_expr
+    |identifier assign_op array_index
+    |identifier assign_op function_call
+		|identifier assign_op unary_expr
+		|unary_expr assign_op unary_expr
     ;
 
-unary_expr:	lhs INCREMENT                          {$$ = $1->value = ($1->value)++;}
-		|lhs DECREMENT                                 {$$ = $1->value = ($1->value)--;}
-		|DECREMENT lhs                                 {$$ = $2->value = --($2->value);}
-		|INCREMENT lhs                                 {$$ = $2->value = ++($2->value);}
+unary_expr:	identifier INCREMENT
+		|identifier DECREMENT
+		|DECREMENT identifier
+		|INCREMENT identifier
 
-lhs:IDENTIFIER                                     {$$ = $1; if(! $1->data_type) $1->data_type = current_dtype;}
-    //|array_index
+identifier:IDENTIFIER                                    {
+																														if(is_declaration)
+																														{
+																															$1 = insert(SYMBOL_TABLE,yytext,identifier);
+																															if($1 == NULL) yyerror("Re-declaration of variable");
+																														}
+																														else
+																														{
+																															$1 = search_recursive(yytext);
+																															if($1 == NULL) yyerror("Variable not declared");
+																														}
+																														$$ = $1;
+																														if(! $1->data_type)
+																														$1->data_type = current_dtype;
+																												}
     ;
 
-assign_op:'='                                      {$$ = '=';}
-    |ADD_ASSIGN                                    {$$ = ADD_ASSIGN;}
-    |SUB_ASSIGN                                    {$$ = SUB_ASSIGN;}
-    |MUL_ASSIGN                                    {$$ = MUL_ASSIGN;}
-    |DIV_ASSIGN                                    {$$ = DIV_ASSIGN;}
-    |MOD_ASSIGN                                    {$$ = MOD_ASSIGN;}
+assign_op:'='
+    |ADD_ASSIGN
+    |SUB_ASSIGN
+    |MUL_ASSIGN
+    |DIV_ASSIGN
+    |MOD_ASSIGN
     ;
 
-arithmetic_expr: arithmetic_expr '+' arithmetic_expr    {$$ = $1 + $3;}
-    |arithmetic_expr '-' arithmetic_expr                {$$ = $1 - $3;}
-    |arithmetic_expr '*' arithmetic_expr                {$$ = $1 * $3;}
-    |arithmetic_expr '/' arithmetic_expr                {$$ = ($3 == 0) ? yyerror("Divide by 0!") : ($1 / $3);}
-		|arithmetic_expr '%' arithmetic_expr                {$$ = (int)$1 % (int)$3;}
-		|'(' arithmetic_expr ')'                            {$$ = $2;}
-    |'-' arithmetic_expr %prec UMINUS                   {$$ = -$2;}
-    |IDENTIFIER                                         {$$ = $1 -> value;}
-    |constant                                           {$$ = $1;}
+arithmetic_expr: arithmetic_expr '+' arithmetic_expr
+    |arithmetic_expr '-' arithmetic_expr
+    |arithmetic_expr '*' arithmetic_expr
+    |arithmetic_expr '/' arithmetic_expr
+		|arithmetic_expr '%' arithmetic_expr
+		|'(' arithmetic_expr ')'
+    |'-' arithmetic_expr %prec UMINUS
+    |identifier
+    |constant
     ;
 
-constant: DEC_CONSTANT                                  {$$ = $1;}
-    |HEX_CONSTANT                                       {$$ = $1;}
+constant: DEC_CONSTANT
+    |HEX_CONSTANT
     ;
 
-array_index: IDENTIFIER '[' sub_expr ']'
+array_index: identifier '[' sub_expr ']'
 
-function_call: IDENTIFIER '(' parameter_list ')'
-             |IDENTIFIER '(' ')'
+function_call: identifier '(' parameter_list ')'
+             |identifier '(' ')'
              ;
 
 parameter_list:
@@ -253,25 +284,16 @@ parameter: sub_expr
 %%
 
 #include "lex.yy.c"
-#include <ctype.h>
-
-
-double Evaluate (double lhs_value,int assign_type,double rhs_value)
-{
-	switch(assign_type)
-	{
-		case '=': return rhs_value;
-		case ADD_ASSIGN: return (lhs_value + rhs_value);
-		case SUB_ASSIGN: return (lhs_value - rhs_value);
-		case MUL_ASSIGN: return (lhs_value * rhs_value);
-		case DIV_ASSIGN: return (lhs_value / rhs_value);
-		case MOD_ASSIGN: return ((int)lhs_value % (int)rhs_value);
-	}
-}
 
 int main(int argc, char *argv[])
 {
-	symbol_table = create_table();
+	 int i;
+	 for(i=0; i<NUM_TABLES;i++)
+	 {
+	  symbol_table_list[i].symbol_table = NULL;
+	  symbol_table_list[i].parent = -1;
+	 }
+
 	constant_table = create_table();
 
 	yyin = fopen(argv[1], "r");
