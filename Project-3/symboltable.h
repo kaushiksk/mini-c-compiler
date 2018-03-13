@@ -18,8 +18,8 @@
 #define HASH_TABLE_SIZE 100
 #define NUM_TABLES 10
 
-int table_index = -1;
-int current_scope = -1;
+int table_index = 0;
+int current_scope = 0;
 
 /* struct to hold each entry */
 struct entry_s
@@ -251,19 +251,20 @@ int check_parameter_list(entry_t* entry, int* list)
 	return 1;
 }
 
+
 // Traverse the hash table and print all the entries
-void display(entry_t** hash_table_ptr)
+void display(int idx)
 {
 	int i;
 	entry_t* traverser;
     printf("\n====================================================\n");
     printf(" %-20s %-20s %-20s\n","lexeme","value","data-type");
     printf("====================================================\n");
-
+	entry_t** hash_table_ptr = symbol_table_list[idx].symbol_table;
 	for( i=0; i < HASH_TABLE_SIZE; i++)
 	{
-		traverser = hash_table_ptr[i];
 
+		traverser = hash_table_ptr[i];
 		while( traverser != NULL)
 		{
 			printf(" %-20s %-20d %-20d \n", traverser->lexeme, (int)traverser->value, traverser->data_type);
@@ -271,5 +272,17 @@ void display(entry_t** hash_table_ptr)
 		}
 	}
     printf("====================================================\n");
+
+}
+
+
+void display_all()
+{
+		int i;
+		for(i=0; i<table_index+1; i++){
+			printf("Scope: %d\n",i);
+			display(i);
+			printf("\n\n");
+		}
 
 }

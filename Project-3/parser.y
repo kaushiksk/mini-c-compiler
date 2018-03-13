@@ -3,9 +3,11 @@
 	#include <stdio.h>
 	#include "symboltable.h"
 
+	#include "lex.yy.c"
+
 	#define SYMBOL_TABLE symbol_table_list[current_scope].symbol_table
 
-  entry_t** constant_table;
+  extern entry_t** constant_table;
 
 	int current_dtype;
 	int yyerror(char *msg);
@@ -20,10 +22,11 @@
 
 %union
 {
-
+	double dval;
+	entry_t* entry;
 }
 
-%token <entry> identifier
+%token <entry> IDENTIFIER
 
  /* Constants */
 %token <dval> DEC_CONSTANT HEX_CONSTANT
@@ -38,19 +41,19 @@
 %token INCREMENT DECREMENT
 
  /* Data types */
-%token SHORT INT LONG LONG_LONG SIGNED UNSIGNED CONST
+%token SHORT INT LONG LONG_LONG SIGNED UNSIGNED CONST VOID
 
  /* Keywords */
 %token IF FOR WHILE CONTINUE BREAK RETURN
 
-%type <dval> expression
-%type <dval> sub_expr
-%type <dval> constant
-%type <dval> unary_expr
-%type <dval> arithmetic_expr
-%type <dval> assignment_expr
 %type <entry> identifier
-%type <ival> assign_op
+ /* %type <dval> expression
+ %type <dval> sub_expr
+ %type <dval> constant
+ %type <dval> unary_expr
+ %type <dval> arithmetic_expr
+ %type <dval> assignment_expr
+ %type <ival> assign_op */
 
 %start starter
 
@@ -81,7 +84,7 @@ builder: function|
        declaration;
 
  /* This is how a function looks like */
-function: type {func_type = current_dtype;} identifier '(' argument_list ')' {is_func = 1;} compound_stmt {is_func = 0;}
+function: type {func_type = current_dtype; is_declaration=1;} identifier {is_declaration = 0;} '(' argument_list ')' {is_func = 1;} compound_stmt {is_func = 0;}
         ;
  /* Now we will define a grammar for how types can be specified */
 
@@ -157,7 +160,7 @@ single_stmt :if_block
 		|RETURN sub_expr ';'			 {
 																	if(is_func)
 																	{
-																		if(func_type != $2)
+																		if(func_type != INT)
 																			yyerror("return type does not match function type");
 																	}
 																	else yyerror("return statement not in function definition");
@@ -183,7 +186,7 @@ declaration_list: declaration_list ',' sub_decl
 		|sub_decl;
 
 sub_decl: assignment_expr
-    |identifier                     {$1 -> data_type = current_dtype;}
+    |identifier
     |array_index
     /*|struct_block ';'*/
     ;
@@ -229,17 +232,19 @@ unary_expr:	identifier INCREMENT
 identifier:IDENTIFIER                                    {
 																														if(is_declaration)
 																														{
-																															$1 = insert(SYMBOL_TABLE,yytext,identifier);
+																															$1 = insert(SYMBOL_TABLE,yytext,IDENTIFIER);
 																															if($1 == NULL) yyerror("Re-declaration of variable");
 																														}
 																														else
 																														{
 																															$1 = search_recursive(yytext);
-																															if($1 == NULL) yyerror("Variable not declared");
+																															if($1 == NULL) yyerror("Variable not declared in scope");
 																														}
 																														$$ = $1;
-																														if(! $1->data_type)
+
+																														if($1!=NULL && !$1->data_type)
 																														$1->data_type = current_dtype;
+
 																												}
     ;
 
@@ -283,7 +288,6 @@ parameter: sub_expr
         ;
 %%
 
-#include "lex.yy.c"
 
 int main(int argc, char *argv[])
 {
@@ -295,7 +299,7 @@ int main(int argc, char *argv[])
 	 }
 
 	constant_table = create_table();
-
+  symbol_table_list[0].symbol_table = create_table();
 	yyin = fopen(argv[1], "r");
 
 	if(!yyparse())
@@ -309,7 +313,7 @@ int main(int argc, char *argv[])
 
 
 	printf("\n\tSymbol table");
-	display(symbol_table);
+	display_all();
 
 
 	fclose(yyin);
@@ -319,4 +323,5 @@ int main(int argc, char *argv[])
 int yyerror(char *msg)
 {
 	printf("Line no: %d Error message: %s Token: %s\n", yylineno, msg, yytext);
+	exit(0);
 }

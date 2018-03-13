@@ -5,7 +5,7 @@
 #include <limits.h>
 /* #include "symboltable.h" */
 #include "y.tab.h"
-
+entry_t** constant_table;
 /* entry_t** symbol_table; */
 /* entry_t** constant_table; */
 int cmnt_strt = 0;
@@ -38,7 +38,7 @@ hex [0-9a-f]
 "else"                            {return ELSE;}
 "return"                          {return RETURN;}
 
-{identifier}                      {yylval.entry = insert(symbol_table, yytext, INT_MAX); return  IDENTIFIER;}
+{identifier}                      {return  IDENTIFIER;}
 {ws}                              ;
 [+\-]?[0][x|X]{hex}+[lLuU]?        { yylval.dval = (int)strtol(yytext, NULL, 16); return  HEX_CONSTANT;}
 [+\-]?{digit}+[lLuU]?              {yylval.dval = atoi(yytext); return  DEC_CONSTANT;}

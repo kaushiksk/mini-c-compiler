@@ -26,8 +26,9 @@ int main(){
     int y;
     z=1;
     {
-      int w=1;
+      int w =1;
     }
+    w=3;
   }
 
 }
