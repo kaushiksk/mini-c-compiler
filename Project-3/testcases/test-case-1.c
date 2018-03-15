@@ -1,33 +1,31 @@
 /*
- */
+-Redeclaration
+-Undeclared Variable
+-lhs and rhs type not matching
+- Arithmetic and logical expression type mismatch
+-Return type and function type mismatch
+-Array index out of range for constants
+-Invalid array dimensions
+- Break and continue outside for loop
+-Scope
+-Parameter type and number checking
+
+*/
 
 
 /*
 Karthik M - 15CO221
 Kaushik S Kalmady - 15CO222
-Compiler Design Project 2
+Compiler Design Project 3
 
 Test Case 1
-- Missing semicolon
-- Single quotes for characters and double quotes for strings
 
-The output in lex/yacc should identify statements without a terminating semiclon and unmatched single and double quotes
+Redeclaration
+Undeclared variables
 */
 
 
-int main(){
-
-  int x = 1;
-
-  int y;
-  int z;
-  if(x<0)
-  {
-    int y;
-    z=1;
-    {
-      int w=1;
-    }
-  }
+int main()
+{
 
 }
