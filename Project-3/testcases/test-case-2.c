@@ -1,29 +1,21 @@
 /*
 Karthik M - 15CO221
 Kaushik S Kalmady - 15CO222
-Compiler Design Project 2
+Compiler Design Project 3
 
-Test Case 2
- - Test for unmatched parantheses
-
-The output in lex/yacc should print an error message when parantheses are not matched
-
+Test Case 3
+Check for invalid array dimensions
+Check for array index out of range
+In declaration staments with assignment, check which identifiers to check for redeclaraion(e.g int a=b; a should be checked for redeclaration and not b)
 */
 
 
 int main()
 {
-	int array1[10];
-	int array2[20;
+	int arr[0]; //Invalid
+    int arr1[-1]; //Invalid
+    int arr2[10];
 
-	for(int a = 3; a<4; a++
-	{
-		a = array1[0];
-	}
-
-	func();
+    int x = arr2[5], y = arr2[15]; //Index out of bound
+    return 0;
 }
-
-int func()
-{
-	return 20;

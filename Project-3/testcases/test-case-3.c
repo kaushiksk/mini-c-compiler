@@ -1,33 +1,32 @@
 /*
 Karthik M - 15CO221
 Kaushik S Kalmady - 15CO222
-Compiler Design Project 2
+Compiler Design Project 3
 
 Test Case 3
- - Left hand side of an assignment statement should be an lvalue
-
-The output in lex/yacc should identify those assignment statements whose left habd side is not an lvalue and stray characters must be detected as an error
+LHS and RHS types should match in assignment expressions
+Types need to match in arithmetic/relational and logical expressions too
 */
 
 
 int main()
 {
+    int x;
+    float y;
+    char z;
 
-  `
-  @ -
-  total = x @ y;
+    x = 1; //Valid
+    y = 'c'; //Invalid
+    z ='2'; //valid
 
-	int a = 4;
+    int c = 2;
+    int d;
+    d = x + c; //valid
+    d = z + c; // Invalid
 
-	if(a > 0 )
-	{
-		printf("a is positive");
-		a * 2 = a;
-	}
-	else
-	{
-		printf("a is negative");
-		a = a * 2;
-	}
-
+    char a;
+    if(x < c){
+        a = c;
+    }
+    return 0;
 }

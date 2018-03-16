@@ -1,37 +1,27 @@
 /*
 Karthik M - 15CO221
 Kaushik S Kalmady - 15CO222
-Compiler Design Project 2
+Compiler Design Project 3
 
 Test Case 5
-
-- Program file with no errors. This should complete parsing successfully
+Check function parameter number and type
 
 */
 
+int fun(int i, char c){
+    return 2;
+}
+
+int fun2(int i, char c){
+    return '2';
+}
 
 int main()
 {
-  unsigned int a = 0x0f;
-  long int mylong = 123456l;
-  long int i, j;
+    fun(2); //Number of parameters dont match
+    fun(2,2); //Parameter types dont match
+    fun(2,'3'); // Valid
+    fun(2,'3',4); //Invalid
 
-  for(i=0; i < 10; i++)
-  {
-    for(j=10; j > 0; j--)
-	{
-		printf("%d",i);
-    }
-  }
-
-  diff = x - y;
-  int rem = x % y;
-  printf ("Total = %d \n", total);
-
-  int result = IncreaseBy10(x);
-}
-
-int IncreaseBy10(int x)
-{
-	return x + 10;
+    return 2;
 }

@@ -22,6 +22,7 @@
 	int param_list[10];
 	int p_idx = 0;
 	int p=0;
+    int t = 0;
 
 	void type_check(int,int,int);
 %}
@@ -112,8 +113,10 @@ function: type
           ;
  /* Now we will define a grammar for how types can be specified */
 
-type : data_type pointer											{is_declaration = 1;}
-     | data_type														  {is_declaration = 1;}
+type : data_type pointer
+     {is_declaration = 1; t=1;}
+     | data_type
+     {is_declaration = 1; t=1;}
 		 ;
 
 pointer: '*' pointer
@@ -214,12 +217,13 @@ if_block:IF '(' expression ')' stmt 								%prec LOWER_THAN_ELSE
 while_block: WHILE '(' expression	')' {is_loop = 1;} stmt {is_loop = 0;}
 		;
 
-declaration: type declaration_list ';' 										{is_declaration = 0;}
+declaration: type  declaration_list ';'
+           {is_declaration = 0;t=0; }
 					 | declaration_list ';'
 					 | unary_expr ';'
 
 
-declaration_list: declaration_list ',' sub_decl
+declaration_list: declaration_list ',' {if(t) is_declaration = 1;}sub_decl
 								|sub_decl
 								;
 
@@ -275,6 +279,7 @@ identifier:IDENTIFIER                                    {
 																														{
 																															$1 = insert(SYMBOL_TABLE,yytext,INT_MAX,current_dtype);
 																															if($1 == NULL) yyerror("Redeclaration of variable");
+                                                                                                                            is_declaration=0;
 																														}
 																														else
 																														{
