@@ -22,7 +22,7 @@
 	int param_list[10];
 	int p_idx = 0;
 	int p=0;
-    int t = 0;
+    int rhs = 0;
 
 	void type_check(int,int,int);
 %}
@@ -114,9 +114,9 @@ function: type
  /* Now we will define a grammar for how types can be specified */
 
 type : data_type pointer
-     {is_declaration = 1; t=1;}
+     {is_declaration = 1; }
      | data_type
-     {is_declaration = 1; t=1;}
+     {is_declaration = 1; }
 		 ;
 
 pointer: '*' pointer
@@ -218,12 +218,12 @@ while_block: WHILE '(' expression	')' {is_loop = 1;} stmt {is_loop = 0;}
 		;
 
 declaration: type  declaration_list ';'
-           {is_declaration = 0;t=0; }
+           {is_declaration = 0; }
 					 | declaration_list ';'
 					 | unary_expr ';'
 
 
-declaration_list: declaration_list ',' {if(t) is_declaration = 1;}sub_decl
+declaration_list: declaration_list ',' sub_decl
 								|sub_decl
 								;
 
@@ -258,11 +258,11 @@ sub_expr:
 
 
 assignment_expr :
-		lhs assign_op arithmetic_expr												{type_check($1,$3,1); $$ = $3;}
-    |lhs assign_op array_access													{type_check($1,$3,1); $$ = $3;}
-    |lhs assign_op function_call												{type_check($1,$3,1); $$ = $3;}
-		|lhs assign_op unary_expr														{type_check($1,$3,1); $$ = $3;}
-		|unary_expr assign_op unary_expr										{type_check($1,$3,1); $$ = $3;}
+		lhs assign_op  arithmetic_expr												{type_check($1,$3,1); $$ = $3;}
+    |lhs assign_op  array_access													{type_check($1,$3,1); $$ = $3;}
+    |lhs assign_op  function_call												{type_check($1,$3,1); $$ = $3;}
+	|lhs assign_op  unary_expr                                                  {type_check($1,$3,1); $$ = $3;}
+		|unary_expr assign_op  unary_expr										{type_check($1,$3,1); $$ = $3;}
     ;
 
 unary_expr:	identifier INCREMENT												{$$ = $1->data_type;}
@@ -275,27 +275,29 @@ lhs: identifier																					{$$ = $1->data_type;}
 	 ;
 
 identifier:IDENTIFIER                                    {
-																														if(is_declaration)
-																														{
-																															$1 = insert(SYMBOL_TABLE,yytext,INT_MAX,current_dtype);
-																															if($1 == NULL) yyerror("Redeclaration of variable");
-                                                                                                                            is_declaration=0;
-																														}
-																														else
-																														{
-																															$1 = search_recursive(yytext);
-																															if($1 == NULL) yyerror("Variable not declared");
-																														}
-																														$$ = $1;
-																												}
+                                                                    if(is_declaration
+                                                                    && !rhs) 
+                                                                    {
+                                                                        $1 = insert(SYMBOL_TABLE,yytext,INT_MAX,current_dtype);
+                                                                        if($1 == NULL) yyerror("Redeclaration of variable");
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        $1 = search_recursive(yytext);
+                                                                        if($1 == NULL) yyerror("Variable not declared");
+                                                                        if(rhs)
+                                                                        rhs = 0;
+                                                                    }
+                                                                    $$ = $1;
+                                                            }
     			 ;
 
-assign_op:'='
-    |ADD_ASSIGN
-    |SUB_ASSIGN
-    |MUL_ASSIGN
-    |DIV_ASSIGN
-    |MOD_ASSIGN
+assign_op:'=' {rhs=1;}
+    |ADD_ASSIGN {rhs=1;} 
+    |SUB_ASSIGN {rhs=1;}
+    |MUL_ASSIGN {rhs=1;}
+    |DIV_ASSIGN {rhs=1;}
+    |MOD_ASSIGN {rhs=1;}
     ;
 
 arithmetic_expr: arithmetic_expr '+' arithmetic_expr				{type_check($1,$3,0);}

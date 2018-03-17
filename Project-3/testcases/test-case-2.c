@@ -6,7 +6,8 @@ Compiler Design Project 3
 Test Case 3
 Check for invalid array dimensions
 Check for array index out of range
-In declaration staments with assignment, check which identifiers to check for redeclaraion(e.g int a=b; a should be checked for redeclaration and not b)
+In declaration list with assign statement differentiate lhs and rhs(i.e lhs should be checked for redeclaraion but rhs shouldn't.
+In "int a=b, c=d;" a,c have to be checked for redeclarion, b,d have to checked if they have been declared at all.)
 */
 
 
@@ -16,6 +17,7 @@ int main()
     int arr1[-1]; //Invalid
     int arr2[10];
 
-    int x = arr2[5], y = arr2[15]; //Index out of bound
+    int x = arr2[5],  y = arr2[9]; //Valid
+    int w = arr2[4],  z = arr2[11];
     return 0;
 }
