@@ -258,11 +258,11 @@ sub_expr:
 
 
 assignment_expr :
-		lhs assign_op  arithmetic_expr												{type_check($1,$3,1); $$ = $3;}
-    |lhs assign_op  array_access													{type_check($1,$3,1); $$ = $3;}
-    |lhs assign_op  function_call												{type_check($1,$3,1); $$ = $3;}
-	|lhs assign_op  unary_expr                                                  {type_check($1,$3,1); $$ = $3;}
-		|unary_expr assign_op  unary_expr										{type_check($1,$3,1); $$ = $3;}
+		lhs assign_op  arithmetic_expr												{type_check($1,$3,1); $$ = $3; rhs=0;}
+    |lhs assign_op  array_access													{type_check($1,$3,1); $$ = $3;rhs=0;}
+    |lhs assign_op  function_call												{type_check($1,$3,1); $$ = $3;rhs=0;}
+	|lhs assign_op  unary_expr                                                  {type_check($1,$3,1); $$ = $3;rhs=0;}
+		|unary_expr assign_op  unary_expr										{type_check($1,$3,1); $$ = $3;rhs=0;}
     ;
 
 unary_expr:	identifier INCREMENT												{$$ = $1->data_type;}
@@ -285,8 +285,6 @@ identifier:IDENTIFIER                                    {
                                                                     {
                                                                         $1 = search_recursive(yytext);
                                                                         if($1 == NULL) yyerror("Variable not declared");
-                                                                        if(rhs)
-                                                                        rhs = 0;
                                                                     }
                                                                     $$ = $1;
                                                             }
