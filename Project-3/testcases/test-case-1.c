@@ -16,7 +16,7 @@ int main()
     int y;
     
     y = 1;
-    int x; //Redeclaration error
+    /*int x; //Redeclaration error*/
     if(y > 0){
         int x; //This is fine
     }
@@ -27,6 +27,6 @@ int main()
         int z;
     }
 
-    z = 2; //Variable not declared in scope
+    /*z = 2; //Variable not declared in scope*/
 
 }

@@ -16,17 +16,17 @@ int main()
     char z;
 
     x = 1; //Valid
-    y = 'c'; //Invalid
+    /*y = 'c'; //Invalid*/
     z ='2'; //valid
 
     int c = 2;
     int d;
     d = x + c; //valid
-    d = z + c; // Invalid
+    /*d = z + c; // Invalid*/
 
     char a;
     if(x < c){
-        a = c;
+        /*a = c; //Invalid*/
     }
     return 0;
 }

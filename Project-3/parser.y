@@ -321,8 +321,18 @@ array_access: identifier '[' array_index ']'								{
 																																if($3->value <= 0)
 																																	yyerror("size of array is not positive");
 
-																																else if($3->is_constant)
+																																else
+                                                                                                                                if($3->is_constant && !rhs)
 																																	$1->array_dimension = $3->value;
+																																	else if(rhs){
+																																	{
+																																if($3->value > $1->array_dimension)
+																																	yyerror("Array index out of bound");
+
+																																if($3->value < 0)
+																																	yyerror("Array index cannot be negative");
+																															}
+																															}
 																															}
 
 																															else if($3->is_constant)

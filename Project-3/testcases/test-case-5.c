@@ -13,15 +13,15 @@ int fun(int i, char c){
 }
 
 int fun2(int i, char c){
-    return '2';
+    /*return '2';*/
 }
 
 int main()
 {
-    fun(2); //Number of parameters dont match
-    fun(2,2); //Parameter types dont match
+    /*fun(2); //Number of parameters dont match*/
+    /*fun(2,2); //Parameter types dont match*/
     fun(2,'3'); // Valid
-    fun(2,'3',4); //Invalid
+    /*fun(2,'3',4); //Invalid*/
 
     return 2;
 }

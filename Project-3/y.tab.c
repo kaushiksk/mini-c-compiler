@@ -545,7 +545,7 @@ static const yytype_uint16 yyrline[] =
      262,   263,   264,   265,   268,   269,   270,   271,   273,   274,
      277,   293,   294,   295,   296,   297,   298,   301,   302,   303,
      304,   305,   306,   307,   308,   309,   312,   313,   314,   315,
-     318,   339,   340,   343,   349,   357,   358,   361,   362
+     318,   349,   350,   353,   359,   367,   368,   371,   372
 };
 #endif
 
@@ -1988,8 +1988,18 @@ yyreduce:
 																																if((yyvsp[-1].entry)->value <= 0)
 																																	yyerror("size of array is not positive");
 
-																																else if((yyvsp[-1].entry)->is_constant)
+																																else
+                                                                                                                                if((yyvsp[-1].entry)->is_constant && !rhs)
 																																	(yyvsp[-3].entry)->array_dimension = (yyvsp[-1].entry)->value;
+																																	else if(rhs){
+																																	{
+																																if((yyvsp[-1].entry)->value > (yyvsp[-3].entry)->array_dimension)
+																																	yyerror("Array index out of bound");
+
+																																if((yyvsp[-1].entry)->value < 0)
+																																	yyerror("Array index cannot be negative");
+																															}
+																															}
 																															}
 
 																															else if((yyvsp[-1].entry)->is_constant)
@@ -2002,55 +2012,55 @@ yyreduce:
 																															}
 																															(yyval.data_type) = (yyvsp[-3].entry)->data_type;
 																														}
-#line 2006 "y.tab.c" /* yacc.c:1646  */
+#line 2016 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 339 "parser.y" /* yacc.c:1646  */
+#line 349 "parser.y" /* yacc.c:1646  */
     {(yyval.entry) = (yyvsp[0].entry);}
-#line 2012 "y.tab.c" /* yacc.c:1646  */
+#line 2022 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 340 "parser.y" /* yacc.c:1646  */
+#line 350 "parser.y" /* yacc.c:1646  */
     {(yyval.entry) = (yyvsp[0].entry);}
-#line 2018 "y.tab.c" /* yacc.c:1646  */
+#line 2028 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 343 "parser.y" /* yacc.c:1646  */
+#line 353 "parser.y" /* yacc.c:1646  */
     {
 																													(yyval.data_type) = (yyvsp[-3].entry)->data_type;
 																													check_parameter_list((yyvsp[-3].entry),param_list,p_idx);
 																													p_idx = 0;
 																												}
-#line 2028 "y.tab.c" /* yacc.c:1646  */
+#line 2038 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 349 "parser.y" /* yacc.c:1646  */
+#line 359 "parser.y" /* yacc.c:1646  */
     {
 							 																						 (yyval.data_type) = (yyvsp[-2].entry)->data_type;
 																													 check_parameter_list((yyvsp[-2].entry),param_list,p_idx);
 																													 p_idx = 0;
 																												}
-#line 2038 "y.tab.c" /* yacc.c:1646  */
+#line 2048 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 361 "parser.y" /* yacc.c:1646  */
+#line 371 "parser.y" /* yacc.c:1646  */
     {param_list[p_idx++] = (yyvsp[0].data_type);}
-#line 2044 "y.tab.c" /* yacc.c:1646  */
+#line 2054 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 362 "parser.y" /* yacc.c:1646  */
+#line 372 "parser.y" /* yacc.c:1646  */
     {param_list[p_idx++] = STRING;}
-#line 2050 "y.tab.c" /* yacc.c:1646  */
+#line 2060 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2054 "y.tab.c" /* yacc.c:1646  */
+#line 2064 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2278,7 +2288,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 364 "parser.y" /* yacc.c:1906  */
+#line 374 "parser.y" /* yacc.c:1906  */
 
 
 void type_check(int left, int right, int flag)

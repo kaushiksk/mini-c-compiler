@@ -11,13 +11,12 @@ Invalid use of BREAK and CONTINUE
 
 int main()
 {
-    break; //invalid
+    /*break; //invalid*/
 
     int i;
     for(i=1; i<10; i++){
         int x;
         continue;
     }
-
-    continue; //invalid
+    /*continue; //invalid*/
 }
