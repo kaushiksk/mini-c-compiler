@@ -59,7 +59,6 @@ int main()
 int x;
 int y;
 int z;
-
-x = 10;
-y = 10;
-z = y / 12 - 3 * 4;
+x=10;
+y=5;
+z = x/12 + y * 5;

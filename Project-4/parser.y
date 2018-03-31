@@ -11,7 +11,7 @@
 	#include "lex.yy.c"
 
 	#define SYMBOL_TABLE symbol_table_list[current_scope].symbol_table
-
+	#define MEM_ALLOC (content_t*)malloc(sizeof(content_t))
   extern entry_t** constant_table;
 
 	int current_dtype;
@@ -28,15 +28,21 @@
 	int p=0;
   int rhs = 0;
 	int temp_var_number = 0;
+  content_t* ret;
+	char* code;
+	char numconcat[10];
 
 	void type_check(int,int,int);
+	content_t* do_whats_necessary(content_t*, char, content_t*);
+	char * newTemp();
+
 %}
 
 %union
 {
 	int data_type;
 	entry_t* entry;
-	content_t content;
+	content_t* content;
 }
 
 %token <entry> IDENTIFIER
@@ -101,7 +107,7 @@ starter: starter builder
 
  /* Each builder block is either a function or a declaration */
 builder: function
-			 | declaration {if($1.code !=NULL) printf("%s\n",$1.code); }
+| declaration {/*if($1 != NULL && $1->code != NULL) cout<<$1->code<<endl; else printf("Hmm\n");*/ }
 			 ;
 
  /* This is how a function looks like */
@@ -188,13 +194,13 @@ compound_stmt :
     ;
 
 statements:statements stmt  {
-											if($1.code == NULL)
-												$$.code = $2.code;
+											if($1->code == NULL)
+												$$->code = $2->code;
 											else{
-											string code($1.code);
-											string st($2.code);
+											string code($1->code);
+											string st($2->code);
 											code = code + st;
-											$$.code = (char *)code.c_str();
+											$$->code = (char *)code.c_str();
 										}
 }
     |
@@ -221,7 +227,7 @@ single_stmt :if_block
 		|RETURN sub_expr ';'			 {
 																	if(is_func)
 																	{
-																		if(func_type != $2.data_type)
+																		if(func_type != $2->data_type)
 																			yyerror("return type does not match function type");
 																	}
 																	else yyerror("return statement not in function definition");
@@ -264,45 +270,49 @@ expression: expression ',' sub_expr
 					;
 
 sub_expr:
-    sub_expr '>' sub_expr															  {type_check($1.data_type,$3.data_type,2); $$.data_type = $1.data_type;}
-    |sub_expr '<' sub_expr															{type_check($1.data_type,$3.data_type,2); $$.data_type = $1.data_type;}
-    |sub_expr EQ sub_expr																{type_check($1.data_type,$3.data_type,2); $$.data_type = $1.data_type;}
-    |sub_expr NOT_EQ sub_expr														{type_check($1.data_type,$3.data_type,2); $$.data_type = $1.data_type;}
-    |sub_expr LS_EQ sub_expr														{type_check($1.data_type,$3.data_type,2); $$.data_type = $1.data_type;}
-    |sub_expr GR_EQ sub_expr														{type_check($1.data_type,$3.data_type,2); $$.data_type = $1.data_type;}
-		|sub_expr LOGICAL_AND sub_expr											{type_check($1.data_type,$3.data_type,2); $$.data_type = $1.data_type;}
-		|sub_expr LOGICAL_OR sub_expr												{type_check($1.data_type,$3.data_type,2); $$.data_type = $1.data_type;}
-		|'!' sub_expr																				{$$.data_type = $2.data_type;}
-		|arithmetic_expr																		{$$.data_type = $1.data_type;}
-    |assignment_expr																		{$$.data_type = $1.data_type;}
-		|unary_expr																					{$$.data_type = $1.data_type; $$ = $1;}
+    sub_expr '>' sub_expr															  {type_check($1->data_type,$3->data_type,2); $$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+    |sub_expr '<' sub_expr															{type_check($1->data_type,$3->data_type,2); $$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+    |sub_expr EQ sub_expr																{type_check($1->data_type,$3->data_type,2); $$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+    |sub_expr NOT_EQ sub_expr														{type_check($1->data_type,$3->data_type,2); $$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+    |sub_expr LS_EQ sub_expr														{type_check($1->data_type,$3->data_type,2); $$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+    |sub_expr GR_EQ sub_expr														{type_check($1->data_type,$3->data_type,2); $$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+		|sub_expr LOGICAL_AND sub_expr											{type_check($1->data_type,$3->data_type,2); $$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+		|sub_expr LOGICAL_OR sub_expr												{type_check($1->data_type,$3->data_type,2); $$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+		|'!' sub_expr																				{$$ = MEM_ALLOC; $$->data_type = $2->data_type;}
+		|arithmetic_expr																		{$$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+    |assignment_expr																		{$$ = $1;}
+		|unary_expr																					{$$ = MEM_ALLOC; $$->data_type = $1->data_type; $$ = $1;}
     ;
 
 
-assignment_expr :
-		lhs assign_op  arithmetic_expr												{
-																	type_check($1.data_type,$3.data_type,1);
-																	$$.data_type = $3.data_type;
+assignment_expr :lhs assign_op  arithmetic_expr												{
+																	type_check($1->data_type,$3->data_type,1);
+																//	cout<<"Here"<<endl;
+
 																	rhs=0;
-																	string code($1.code);
-																	string op($2.code);
-																	string rhs($3.addr);
-																	code = code + op + rhs;
-																	$$.code = (char *)code.c_str();
+																	string code($3->code);
+																	if(code[0]!=0) code = code + "\n";
+																	code = code + $1->code + $2->code + $3->addr;
+																	//cout<<code<<endl;
+																	$$ = MEM_ALLOC; $$->data_type = $3->data_type;
+																	$$->code = (char *)malloc(code.length()+1);
+																	$$->code = (char *)code.c_str();
+																	cout<<$$->code<<endl;
 																}
-    |lhs assign_op  array_access													{type_check($1.data_type,$3.data_type,1); $$.data_type = $3.data_type;rhs=0;}
-    |lhs assign_op  function_call												  {type_check($1.data_type,$3,1); $$.data_type = $3;rhs=0;}
-	  |lhs assign_op  unary_expr                            {type_check($1.data_type,$3.data_type,1); $$.data_type = $3.data_type;rhs=0;}
-		|unary_expr assign_op  unary_expr										  {type_check($1.data_type,$3.data_type,1); $$.data_type = $3.data_type;rhs=0;}
+    |lhs assign_op  array_access													{type_check($1->data_type,$3->data_type,1); $$ = MEM_ALLOC; $$->data_type = $3->data_type;rhs=0;}
+    |lhs assign_op  function_call												  {type_check($1->data_type,$3,1); $$ = MEM_ALLOC; $$->data_type = $3;rhs=0;}
+	  |lhs assign_op  unary_expr                            {type_check($1->data_type,$3->data_type,1); $$ = MEM_ALLOC; $$->data_type = $3->data_type;rhs=0;}
+		|unary_expr assign_op  unary_expr										  {type_check($1->data_type,$3->data_type,1); $$ = MEM_ALLOC; $$->data_type = $3->data_type;rhs=0;}
     ;
 
-unary_expr:	identifier INCREMENT												{$$.data_type = $1->data_type;}
-					| identifier DECREMENT												{$$.data_type = $1->data_type;}
-					| DECREMENT identifier												{$$.data_type = $2->data_type;}
-					| INCREMENT identifier												{$$.data_type = $2->data_type;}
+unary_expr:	identifier INCREMENT												{$$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+					| identifier DECREMENT												{$$ = MEM_ALLOC; $$->data_type = $1->data_type;}
+					| DECREMENT identifier												{$$ = MEM_ALLOC; $$->data_type = $2->data_type;}
+					| INCREMENT identifier												{$$ = MEM_ALLOC; $$->data_type = $2->data_type;}
 
-lhs: identifier																					{$$.data_type = $1->data_type; $$.code = $1->lexeme; }
-   | array_access																				{$$.data_type = $1.data_type; }
+lhs: identifier																					{ $$ = MEM_ALLOC; $$->data_type = $1->data_type;
+																												 $$->code = (char *)malloc(strlen($1->lexeme)+1);$$->code = $1->lexeme; }
+   | array_access																				{$$ = MEM_ALLOC; $$->data_type = $1->data_type; }
 	 ;
 
 identifier:IDENTIFIER                                    {
@@ -321,128 +331,34 @@ identifier:IDENTIFIER                                    {
                                                             }
     			 ;
 
-assign_op:'=' {rhs=1; $$.code = strdup("=");}
-    |ADD_ASSIGN {rhs=1;$$.code = strdup("+=");}
-    |SUB_ASSIGN {rhs=1; $$.code = strdup("-=");}
-    |MUL_ASSIGN {rhs=1; $$.code = strdup("*=");}
-    |DIV_ASSIGN {rhs=1; $$.code = strdup("/=");}
-    |MOD_ASSIGN {rhs=1; $$.code = strdup("%=");}
+assign_op:'=' {rhs=1;   $$ = MEM_ALLOC; $$->code = strdup(" = ");}
+    |ADD_ASSIGN {rhs=1; $$ = MEM_ALLOC; $$->code = strdup(" += ");}
+    |SUB_ASSIGN {rhs=1; $$ = MEM_ALLOC; $$->code = strdup(" -= ");}
+    |MUL_ASSIGN {rhs=1; $$ = MEM_ALLOC; $$->code = strdup(" *= ");}
+    |DIV_ASSIGN {rhs=1; $$ = MEM_ALLOC; $$->code = strdup(" /= ");}
+    |MOD_ASSIGN {rhs=1; $$ = MEM_ALLOC; $$->code = strdup(" %= ");}
     ;
 
-arithmetic_expr: arithmetic_expr '+' arithmetic_expr				{
-													// do_whats_necessary($$, $1, $2, $3);
-													type_check($1.data_type,$3.data_type,0);
-													string left($1.code);
-													string leftaddr($1.addr);
-													string right($3.code);
-													string rightaddr($3.addr);
-													string addr =  "t" + std::to_string(temp_var_number);
-													temp_var_number++;
-													string exp = addr + '=' + leftaddr + '+' + rightaddr;
-													//cout<<exp<<endl;
-													string code = left + right  + exp;
-													cout<<code<<endl;
-													$$.code = (char *)malloc(20);
-													$$.addr = (char *)malloc(20);
-													//content_t ret = (content_t *)malloc()
-													$$.code = (char *)code.c_str();
-													$$.addr = (char *)addr.c_str();
-													$$.data_type = $1.data_type;
-
-												}
-    |arithmetic_expr '-' arithmetic_expr				{
-															// do_whats_necessary($$, $1, $2, $3);
-															type_check($1.data_type,$3.data_type,0);
-															string left($1.code);
-															string leftaddr($1.addr);
-															string right($3.code);
-															string rightaddr($3.addr);
-															string addr =  "t" + std::to_string(temp_var_number);
-															temp_var_number++;
-															string exp = addr + '=' + leftaddr + '-' + rightaddr;
-															//cout<<exp<<endl;
-															string code = left + right  + exp;
-															cout<<code<<endl;
-															$$.code = (char *)malloc(20);
-															$$.addr = (char *)malloc(20);
-															$$.code = (char *)code.c_str();
-															$$.addr = (char *)addr.c_str();
-															$$.data_type = $1.data_type;
-
-														}
-		|arithmetic_expr '*' arithmetic_expr				{
-															// do_whats_necessary($$, $1, $2, $3);
-															type_check($1.data_type,$3.data_type,0);
-															string left($1.code);
-															string leftaddr($1.addr);
-															string right($3.code);
-															string rightaddr($3.addr);
-															string addr =  "t" + std::to_string(temp_var_number);
-															temp_var_number++;
-															string exp = addr + '=' + leftaddr + '*' + rightaddr;
-															//cout<<exp<<endl;
-															$$.code = (char *)malloc(20);
-															$$.addr = (char *)malloc(20);
-															string code = left + right  + exp;
-															cout<<code<<endl;
-															$$.code = (char *)code.c_str();
-															$$.addr = (char *)addr.c_str();
-															$$.data_type = $1.data_type;
-
-														}
-		|arithmetic_expr '/' arithmetic_expr				{
-															// do_whats_necessary($$, $1, $2, $3);
-															type_check($1.data_type,$3.data_type,0);
-															string left($1.code);
-															string leftaddr($1.addr);
-															string right($3.code);
-															string rightaddr($3.addr);
-															string addr =  "t" + std::to_string(temp_var_number);
-															temp_var_number++;
-															string exp = addr + '=' + leftaddr + '/' + rightaddr;
-															//cout<<exp<<endl;
-															$$.code = (char *)malloc(20);
-															$$.addr = (char *)malloc(20);
-															string code = left + right  + exp;
-															cout<<code<<endl;
-															$$.code = (char *)code.c_str();
-															$$.addr = (char *)addr.c_str();
-															$$.data_type = $1.data_type;
-
-														}
-		|arithmetic_expr '%' arithmetic_expr				{
-															// do_whats_necessary($$, $1, $2, $3);
-															type_check($1.data_type,$3.data_type,0);
-															string left($1.code);
-															string leftaddr($1.addr);
-															string right($3.code);
-															string rightaddr($3.addr);
-															string addr =  "t" + std::to_string(temp_var_number);
-															temp_var_number++;
-															string exp = addr + '=' + leftaddr + '%' + rightaddr;
-															//cout<<exp<<endl;
-															$$.code = (char *)malloc(20);
-															$$.addr = (char *)malloc(20);
-															string code = left + right  + exp;
-															cout<<code<<endl;
-															$$.code = (char *)code.c_str();
-															$$.addr = (char *)addr.c_str();
-															$$.data_type = $1.data_type;
-
-														}
-
-    |'-' arithmetic_expr %prec UMINUS												{$$.data_type = $2.data_type;}
+arithmetic_expr: arithmetic_expr '+' arithmetic_expr				{$$ = do_whats_necessary( $1, '+', $3);	}
+    |arithmetic_expr '-' arithmetic_expr							      {$$ = do_whats_necessary( $1, '-', $3);	}
+    |arithmetic_expr '*' arithmetic_expr							      {$$ = do_whats_necessary( $1, '*', $3);	}
+		|arithmetic_expr '/' arithmetic_expr							      {$$ = do_whats_necessary( $1, '/', $3);	}
+		|arithmetic_expr '%' arithmetic_expr							      {$$ = do_whats_necessary( $1, '%', $3);	}
+    |'-' arithmetic_expr %prec UMINUS												{$$ = MEM_ALLOC; $$->data_type = $2->data_type;}
     |identifier																							{
-																								$$.data_type = $1->data_type;
-																							  $$.addr = $1->lexeme;
-																							  $$.code = (char *) malloc(20);
-																								$$.code[0] = '\0';
+																								$$ = MEM_ALLOC; $$->data_type = $1->data_type;
+																								$$->addr = (char*) malloc(sizeof(char)*(strlen($1->lexeme)+1));
+																							  $$->addr = $1->lexeme;
+																							  $$->code = (char *) malloc(20);
+																								$$->code[0] = 0;
+
 																							}
     |constant																								{
-																								$$.data_type = $1->data_type;
-																							  $$.addr = $1->lexeme;
-																								$$.code = (char *) malloc(20);
-																								$$.code[0] = '\0';}
+																								$$ = MEM_ALLOC; $$->data_type = $1->data_type;
+																								$$->addr = (char*) malloc(sizeof(char)*(strlen($1->lexeme)+1));
+																							  $$->addr = $1->lexeme;
+																								$$->code = (char *) malloc(20);
+																								$$->code[0] = 0;}
     ;
 
 constant: DEC_CONSTANT 												{$1->is_constant=1; $$ = $1;}
@@ -479,7 +395,7 @@ array_access: identifier '[' array_index ']'								{
 																																if($3->value < 0)
 																																	yyerror("Array index cannot be negative");
 																															}
-																															$$.data_type = $1->data_type;
+																															$$ = MEM_ALLOC; $$->data_type = $1->data_type;
 																														}
 
 array_index: constant																		{$$ = $1;}
@@ -504,11 +420,50 @@ parameter_list:
               |parameter
               ;
 
-parameter: sub_expr																			{param_list[p_idx++] = $1.data_type;}
+parameter: sub_expr																			{param_list[p_idx++] = $1->data_type;}
 				 | STRING																				{param_list[p_idx++] = STRING;}
 				 ;
 %%
 
+char * new_var()
+	{
+
+	char *temp = (char *)malloc(to_string(temp_var_number).length()+2);
+	strcpy(temp,"t");
+	snprintf(numconcat, 10,"%d",temp_var_number);
+	strcat(temp,numconcat);
+
+	temp_var_number++;
+	return temp;
+}
+
+content_t* do_whats_necessary(content_t *a, char b, content_t *c)
+{
+
+				type_check(a->data_type,c->data_type,0);
+				string left(a->code);
+				string leftaddr(a->addr);
+				string right(c->code);
+				string rightaddr(c->addr);
+
+				ret = MEM_ALLOC; ret->data_type = a->data_type;
+				ret->addr = (char*) malloc(to_string(temp_var_number).length()+2);
+				ret->addr = new_var();
+				string addr(ret->addr);
+				string exp = addr + " = " + leftaddr + " " + b + " " + rightaddr;
+
+				if(left[0]!=0) left = left + "\n";
+				if(right[0]!=0) right = right + "\n";
+
+				code = (char *) malloc(left.length() + right.length()+ exp.length() + 1);
+				strcat(code, left.c_str());
+				strcat(code, right.c_str());
+				strcat(code, exp.c_str());
+
+				ret->code = (char *)malloc(sizeof(char)*(strlen(code) + 1));
+				ret->code = code;
+				return ret;
+}
 void type_check(int left, int right, int flag)
 {
 	if(left != right)
@@ -525,6 +480,7 @@ void type_check(int left, int right, int flag)
 int main(int argc, char *argv[])
 {
 	 int i;
+	 //cout<<"HI"<<endl;
 
 	 for(i=0; i<NUM_TABLES;i++)
 	 {
@@ -544,14 +500,14 @@ int main(int argc, char *argv[])
 	{
 			printf("\nPARSING FAILED!\n\n\n");
 	}
-
+/*
 
 	printf("SYMBOL TABLES\n\n");
 	//display_all();
 
 	printf("CONSTANT TABLE");
 	//display_constant_table(constant_table);
-
+*/
 
 	fclose(yyin);
 	return 0;

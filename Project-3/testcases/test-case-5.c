@@ -18,7 +18,7 @@ int fun2(int i, char c){
 
 int main()
 {
-    /*fun(2); //Number of parameters dont match*/
+    fun(2); //Number of parameters dont match
     /*fun(2,2); //Parameter types dont match*/
     fun(2,'3'); // Valid
     /*fun(2,'3',4); //Invalid*/
