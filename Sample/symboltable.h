@@ -8,11 +8,14 @@
 */
 
 
-#include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <limits.h>
+#include <stdlib.h>
 #include <string.h>
+#include <vector>
+#include <string>
+int yyerror(char *msg);
+
+using namespace std;
 
 #define HASH_TABLE_SIZE 100
 #define NUM_TABLES 10
@@ -21,7 +24,7 @@ int table_index = 0;
 int current_scope = 0;
 
 /* struct to hold each entry */
-struct entry_s
+struct entry_t
 {
 	char* lexeme;
 	double value;
@@ -30,19 +33,32 @@ struct entry_s
 	int array_dimension;
 	int is_constant;
 	int num_params;
-	struct entry_s* successor;
+	struct entry_t* successor;
 };
 
-typedef struct entry_s entry_t;
+//typedef struct entry_t entry_t;
 
 /* Wrapper for symbol table with pointer to symbol table of parent scope */
-struct table_s
+struct table_t
 {
 	entry_t** symbol_table;
 	int parent;
 };
 
-typedef struct table_s table_t;
+//typedef struct table_s table_t;
+
+struct content_t
+{
+	vector<int> truelist;
+	vector<int> falselist;
+	vector<int> nextlist;
+	string addr;
+	string code;
+
+	entry_t* entry;
+	int data_type;
+};
+//typedef struct content_s content_t;
 
 extern table_t symbol_table_list[NUM_TABLES];
 
@@ -52,7 +68,7 @@ entry_t** create_table()
 	entry_t** hash_table_ptr = NULL; // declare a pointer
 
 	/* Allocate memory for a hashtable array of size HASH_TABLE_SIZE */
-	if( ( hash_table_ptr = malloc( sizeof( entry_t* ) * HASH_TABLE_SIZE ) ) == NULL )
+	if( ( hash_table_ptr = (entry_t**) malloc( sizeof( entry_t* ) * HASH_TABLE_SIZE ) ) == NULL )
     	return NULL;
 
 	int i;
@@ -80,25 +96,25 @@ int exit_scope()
 {
 	return symbol_table_list[current_scope].parent;
 }
-/* Generate hash from a string. Then generate an index in [0, HASH_TABLE_SIZE) */
-uint32_t hash( char *lexeme )
+/* Generate myhash from a string. Then generate an index in [0, HASH_TABLE_SIZE) */
+int myhash( char *lexeme )
 {
 	size_t i;
-	uint32_t hash;
+	int hashvalue;
 
-	/* Apply jenkin's hash function
+	/* Apply jenkin's myhash function
 	* https://en.wikipedia.org/wiki/Jenkins_hash_function#one-at-a-time
 	*/
-	for ( hash = i = 0; i < strlen(lexeme); ++i ) {
-        hash += lexeme[i];
-        hash += ( hash << 10 );
-        hash ^= ( hash >> 6 );
+	for ( hashvalue = i = 0; i < strlen(lexeme); ++i ) {
+        hashvalue += lexeme[i];
+        hashvalue += ( hashvalue << 10 );
+        hashvalue ^= ( hashvalue >> 6 );
     }
-	hash += ( hash << 3 );
-	hash ^= ( hash >> 11 );
-    hash += ( hash << 15 );
+	hashvalue += ( hashvalue << 3 );
+	hashvalue ^= ( hashvalue >> 11 );
+    hashvalue += ( hashvalue << 15 );
 
-	return hash % HASH_TABLE_SIZE; // return an index in [0, HASH_TABLE_SIZE)
+	return hashvalue % HASH_TABLE_SIZE; // return an index in [0, HASH_TABLE_SIZE)
 }
 
 /* Create an entry for a lexeme, token pair. This will be called from the insert function */
@@ -107,7 +123,7 @@ entry_t *create_entry( char *lexeme, int value, int data_type )
 	entry_t *new_entry;
 
 	/* Allocate space for new_entry */
-	if( ( new_entry = malloc( sizeof( entry_t ) ) ) == NULL ) {
+	if( ( new_entry = (entry_t*) malloc( sizeof( entry_t ) ) ) == NULL ) {
 		return NULL;
 	}
 	/* Copy lexeme to new_entry location using strdup (string-duplicate). Return NULL if it fails */
@@ -129,11 +145,11 @@ entry_t *create_entry( char *lexeme, int value, int data_type )
 /* Search for an entry given a lexeme. Return a pointer to the entry of the lexeme exists, else return NULL */
 entry_t* search(entry_t** hash_table_ptr, char* lexeme)
 {
-	uint32_t idx = 0;
+	int idx = 0;
 	entry_t* myentry;
 
-    // get the index of this lexeme as per the hash function
-	idx = hash( lexeme );
+    // get the index of this lexeme as per the myhash function
+	idx = myhash( lexeme );
 
 	/* Traverse the linked list at this idx and see if lexeme exists */
 	myentry = hash_table_ptr[idx];
@@ -169,7 +185,7 @@ entry_t* search_recursive(char* lexeme)
 
 	return finder;
 }
-/* Insert an entry into a hash table. */
+/* Insert an entry into a myhash table. */
 entry_t* insert( entry_t** hash_table_ptr, char* lexeme, int value, int data_type)
 {
 	// Make sure you pass the current scope symbol table here
@@ -181,11 +197,11 @@ entry_t* insert( entry_t** hash_table_ptr, char* lexeme, int value, int data_typ
 		return NULL; //capture this is callee code and do necessary error handling
 	}
 
-	uint32_t idx;
+	int idx;
 	entry_t* new_entry = NULL;
 	entry_t* head = NULL;
 
-	idx = hash( lexeme ); // Get the index for this lexeme based on the hash function
+	idx = myhash( lexeme ); // Get the index for this lexeme based on the myhash function
 	new_entry = create_entry( lexeme, value, data_type ); // Create an entry using the <lexeme, token> pair
 
 	if(new_entry == NULL) // In case there was some error while executing create_entry()
@@ -196,7 +212,7 @@ entry_t* insert( entry_t** hash_table_ptr, char* lexeme, int value, int data_typ
 
 	head = hash_table_ptr[idx]; // get the head entry at this index
 
-	if(head == NULL) // This is the first lexeme that matches this hash index
+	if(head == NULL) // This is the first lexeme that matches this myhash index
 	{
 		hash_table_ptr[idx] = new_entry;
 	}
@@ -251,7 +267,7 @@ void print_dashes(int n)
 	printf("\n");
 }
 
-// Traverse the hash table and print all the entries
+// Traverse the myhash table and print all the entries
 void display_symbol_table(entry_t** hash_table_ptr)
 {
 	int i;

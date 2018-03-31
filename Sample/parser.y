@@ -1,9 +1,18 @@
 %{
 	#include <bits/stdc++.h>
-	int yyerror(char *msg);
-
 	#include "symboltable.h"
 	#include "lex.yy.c"
+
+	using namespace std;
+	int yyerror(char *msg);
+
+
+	int yyparse(void);
+  int yylex(void);
+  int yywrap()
+  {
+          return 1;
+  }
 
 	#define SYMBOL_TABLE symbol_table_list[current_scope].symbol_table
 
@@ -25,15 +34,10 @@
 
 	void type_check(int,int,int);
 
-	struct content_s
-	{
-		vector<int> truelist;
-		vector<int> falselist;
-		int data_type;
-	};
-	typedef struct content_s content_t;
+	int nextinstr = 0;
+	int temp_var_number = 0;
 
-	nextinstr = 0;
+
 %}
 
 %union
@@ -41,6 +45,9 @@
 	int data_type;
 	entry_t* entry;
 	content_t content;
+	string op;
+	vector<int> nextlist;
+	int instr;
 }
 
 %token <entry> IDENTIFIER
@@ -65,14 +72,32 @@
 %type <entry> identifier
 %type <entry> constant
 %type <entry> array_index
+%type <entry> lhs
+
+%type <op> assign;
+%type <op> rel
+%type <op> math;
+
+%type <data_type> function_call
 
 %type <content> sub_expr
-%type <data_type> unary_expr
-%type <data_type> arithmetic_expr
-%type <data_type> assignment_expr
-%type <data_type> function_call
-%type <data_type> array_access
-%type <data_type> lhs
+%type <content> expression
+%type <content> unary_expr
+%type <content> arithmetic_expr
+%type <content> assignment_expr
+%type <content> array_access
+
+%type <content> if_block
+%type <content> while_block
+%type <content> compound_stmt
+
+%type <content> statements
+%type <content> single_stmt
+%type <content> stmt
+
+
+%type <instr> M
+%type <nextlist> N
 
 %left ','
 %right '='
@@ -168,8 +193,8 @@ arg : type identifier									{param_list[p_idx++] = $2->data_type;}
     ;
 
  /* Generic statement. Can be compound or a single statement */
-stmt:compound_stmt
-    |single_stmt
+stmt:compound_stmt										{$$.nextlist = $1.nextlist;}
+    |single_stmt											{$$.nextlist = $1.nextlist;}
     ;
 
  /* The function body is covered in braces and has multiple statements. */
@@ -195,9 +220,9 @@ statements:statements M stmt		{
     ;
 
  /* Grammar for what constitutes every individual statement */
-single_stmt :if_block
+single_stmt :if_block						{$$.nextlist = $1.nextlist;}
     |for_block
-    |while_block
+    |while_block								{$$.nextlist = $1.nextlist;}
     |declaration
     |function_call ';'
 		|RETURN ';'								  {
@@ -250,8 +275,7 @@ while_block: WHILE M '(' expression	')' M {is_loop = 1;} stmt {is_loop = 0;}		{
 																																								}
 		;
 
-declaration: type  declaration_list ';'
-           {is_declaration = 0; }
+declaration: type  declaration_list ';'					{is_declaration = 0; }
 					 | declaration_list ';'
 					 | unary_expr ';'
 
@@ -270,8 +294,8 @@ expression_stmt: expression ';'
     					 | ';'
     			 		 ;
 
-expression: expression ',' sub_expr
-    			| sub_expr
+expression: expression ',' sub_expr									{$$.truelist = $3.truelist; $$.falselist = $3.falselist;}
+    			| sub_expr																{$$.truelist = $1.truelist; $$.falselist = $1.falselist;}
 					;
 
 sub_expr:
@@ -284,7 +308,7 @@ sub_expr:
 																													$$.falselist = {nextinstr + 1};
 
 																													std::string instruction;
-																													instruction = std::to_string(nextinstr) + ": " + "if" + $1.addr + rel.op + $3.addr + "goto _";
+																													instruction = std::to_string(nextinstr) + ": " + "if" + $1.addr + $2.op + $3.addr + "goto _";
 																													outfile << instruction << endl;
 																													nextinstr++;
 																												}
@@ -293,7 +317,7 @@ sub_expr:
 																													type_check($1.data_type,$4.data_type,2);
 																													$$.data_type = $1.data_type;
 
-																													backpatch($1.truelist,M.instr);
+																													backpatch($1.truelist,$3.instr);
 																													$$.truelist = $4.truelist;
 																													$$.falselist = merge($1.falselist,$4.falselist);
 																												}
@@ -302,7 +326,7 @@ sub_expr:
 																													type_check($1.data_type,$4.data_type,2);
 																													$$.data_type = $1.data_type;
 
-																													backpatch($1.falselist,M.instr);
+																													backpatch($1.falselist,$3.instr);
 																													$$.truelist = merge($1.truelist,$4.truelist);
 																													$$.falselist = $4.falselist;
 																												}
@@ -319,12 +343,12 @@ sub_expr:
     ;
 
 
-rel: '>'																								{rel.op = ">";}
-	 | '<'																								{rel.op = "<";}
-	 | EQ                                                 {rel.op = "==";}
-	 | NOT_EQ                                             {rel.op = "!=";}
-	 | LS_EQ																							{rel.op = "<=";}
-	 | GR_EQ																							{rel.op = ">=";}
+rel: '>'																								{$$.op = ">";}
+	 | '<'																								{$$.op = "<";}
+	 | EQ                                                 {$$.op = "==";}
+	 | NOT_EQ                                             {$$.op = "!=";}
+	 | LS_EQ																							{$$.op = "<=";}
+	 | GR_EQ																							{$$.op = ">=";}
 	 ;
 
 assignment_expr :
@@ -352,7 +376,7 @@ assignment_expr :
 																											 nextinstr++;
 																											}
 
-    |lhs assign function_call													{type_check($1,$3,1); $$ = $3;}
+    |lhs assign function_call													{type_check($1->data_type,$3,1); $$.data_type = $3;}
 
 		|lhs assign unary_expr                            {
 																											 type_check($1->data_type,$3.data_type,1);
@@ -385,7 +409,7 @@ unary_expr:	identifier INCREMENT												{$$.data_type = $1->data_type; $$.co
 					| INCREMENT identifier												{$$.data_type = $2->data_type; $$.code = "++" + $2->lexeme;}
 
 lhs: identifier																					{$$ = $1;}
-   | array_access																				{$$ = $1;}
+   | array_access																				{$$ = $1.entry;}
 	 ;
 
 identifier:IDENTIFIER                                    {
@@ -406,12 +430,12 @@ identifier:IDENTIFIER                                    {
                                                          }
     			 ;
 
-assign:'=' 																{rhs=1; $$.op = "="; }
-    |ADD_ASSIGN 													{rhs=1; $$.op = "+=";}
-    |SUB_ASSIGN 													{rhs=1; $$.op = "-=";}
-    |MUL_ASSIGN 													{rhs=1; $$.op = "*=";}
-    |DIV_ASSIGN 													{rhs=1;	$$.op = "/=";}
-    |MOD_ASSIGN 													{rhs=1; $$.op = "%=";}
+assign:'=' 																{rhs=1; $$ = "="; }
+    |ADD_ASSIGN 													{rhs=1; $$ = "+=";}
+    |SUB_ASSIGN 													{rhs=1; $$ = "-=";}
+    |MUL_ASSIGN 													{rhs=1; $$ = "*=";}
+    |DIV_ASSIGN 													{rhs=1;	$$ = "/=";}
+    |MOD_ASSIGN 													{rhs=1; $$ = "%=";}
     ;
 
 arithmetic_expr: arithmetic_expr math arithmetic_expr								 {
@@ -428,7 +452,7 @@ arithmetic_expr: arithmetic_expr math arithmetic_expr								 {
 								 																											$$.data_type = $2.data_type;
 
 																																			$$.addr = $2.addr;
-																																			$$.code = $1.code;
+																																			$$.code = $2.code;
 																																		 }
 
     			 		 |'-' arithmetic_expr %prec UMINUS										 {
@@ -437,6 +461,8 @@ arithmetic_expr: arithmetic_expr math arithmetic_expr								 {
 																																			$$.addr = "t" + std::to_string(temp_var_number);
 																																			std::string expr = $$.addr + "=" + "-" + $2.addr;
 																																			$$.code = $2.code + expr;
+
+																																			temp_var_number++;
 																																		 }
 
     			 		 |identifier																					 {
@@ -485,7 +511,12 @@ array_access: identifier '[' array_index ']'								{
 																															}
 
 																															$$.data_type = $1.data_type;
-																															$$.code = $1->lexeme + "[" + $2->value + "]";
+
+																															if($3->is_constant)
+																																$$.code = $1->lexeme + "[" + $3->value + "]";
+																															else
+																																$$.code = $1->lexeme + "[" + $3->lexeme + "]";
+																															$$.entry = $1;
 																														}
 
 array_index: constant																		{$$ = $1;}

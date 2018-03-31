@@ -1,4 +1,8 @@
 #!/bin/bash
-lex lexer.l
-yacc -d parser.y -v
-gcc -w -g y.tab.c -ly -ll
+ lex lexer.l
+ yacc -d parser.y -v
+ g++ -std=c++11 -w -g y.tab.c -ly -ll
+#lex lexer.l
+#yacc -d parser.y -v
+#g++ -c lex.yy.c -o lex.yy.o
+#g++ -std=c++11 lex.yy.o y.tab.c -ll
