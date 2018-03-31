@@ -8,12 +8,15 @@
 */
 
 
-#include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <limits.h>
 #include <string.h>
-#include <vector>
-#include <string>
-int yyerror(char *msg);
+// #include <vector>
+// #include <string>
+
+int yyerror(const char *msg);
 
 using namespace std;
 
@@ -221,6 +224,8 @@ entry_t* insert( entry_t** hash_table_ptr, char* lexeme, int value, int data_typ
 		new_entry->successor = hash_table_ptr[idx];
 		hash_table_ptr[idx] = new_entry;
 	}
+
+	// printf("Insert complete:%s\n",lexeme);
 	return hash_table_ptr[idx];
 }
 

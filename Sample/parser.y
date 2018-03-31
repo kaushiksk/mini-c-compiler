@@ -4,15 +4,8 @@
 	#include "lex.yy.c"
 
 	using namespace std;
+
 	int yyerror(char *msg);
-
-
-	int yyparse(void);
-  int yylex(void);
-  int yywrap()
-  {
-          return 1;
-  }
 
 	#define SYMBOL_TABLE symbol_table_list[current_scope].symbol_table
 
@@ -33,10 +26,16 @@
   int rhs = 0;
 
 	void type_check(int,int,int);
+	vector<int> merge(vector<int>& v1, vector<int>& v2);
+	void backpatch(vector<int>&, int);
+	void gencode_math(content_t* & lhs, content_t* arg1, content_t* arg2, const string& op);
+	void gencode_rel(content_t* & lhs, content_t* arg1, content_t* arg2, const string& op);
+
 
 	int nextinstr = 0;
 	int temp_var_number = 0;
 
+	vector<string> ICG;
 
 %}
 
@@ -44,9 +43,9 @@
 {
 	int data_type;
 	entry_t* entry;
-	content_t content;
-	string op;
-	vector<int> nextlist;
+	content_t* content;
+	string* op;
+	vector<int>* nextlist;
 	int instr;
 }
 
@@ -72,14 +71,11 @@
 %type <entry> identifier
 %type <entry> constant
 %type <entry> array_index
-%type <entry> lhs
 
 %type <op> assign;
-%type <op> rel
-%type <op> math;
-
 %type <data_type> function_call
 
+%type <content> lhs
 %type <content> sub_expr
 %type <content> expression
 %type <content> unary_expr
@@ -193,8 +189,8 @@ arg : type identifier									{param_list[p_idx++] = $2->data_type;}
     ;
 
  /* Generic statement. Can be compound or a single statement */
-stmt:compound_stmt										{$$.nextlist = $1.nextlist;}
-    |single_stmt											{$$.nextlist = $1.nextlist;}
+stmt:compound_stmt										{$$ = new content_t(); $$->nextlist = $1->nextlist;}
+    |single_stmt											{$$ = new content_t(); $$->nextlist = $1->nextlist;}
     ;
 
  /* The function body is covered in braces and has multiple statements. */
@@ -208,23 +204,31 @@ compound_stmt :
 
 							'}' 							{
 																	current_scope = exit_scope();
-																	$$.nextlist = $3.nextlist;
+
+																	$$ = new content_t();
+																	$$->nextlist = $3->nextlist;
+
 																}
     ;
 
 statements:statements M stmt		{
-																	backpatch($1.nextlist,$2.instr);
-																	$$.nextlist = $3.nextlist;
+																	backpatch($1->nextlist,$2);
+
+																	$$ = new content_t();
+																	$$->nextlist = $3->nextlist;
 																}
-    |
+
+    |														{
+																	$$ = new content_t();
+																}
     ;
 
  /* Grammar for what constitutes every individual statement */
-single_stmt :if_block						{$$.nextlist = $1.nextlist;}
-    |for_block
-    |while_block								{$$.nextlist = $1.nextlist;}
-    |declaration
-    |function_call ';'
+single_stmt :if_block						{$$ = new content_t(); $$->nextlist = $1->nextlist;}
+    |for_block									{$$ = new content_t();}
+    |while_block								{$$ = new content_t(); $$->nextlist = $1->nextlist;}
+    |declaration								{$$ = new content_t();}
+    |function_call ';'					{$$ = new content_t();}
 		|RETURN ';'								  {
 																	if(is_func)
 																	{
@@ -240,7 +244,7 @@ single_stmt :if_block						{$$.nextlist = $1.nextlist;}
 		|RETURN sub_expr ';'			 {
 																	if(is_func)
 																	{
-																		if(func_type != $2)
+																		if(func_type != $2->data_type)
 																			yyerror("return type does not match function type");
 																	}
 																	else yyerror("return statement not in function definition");
@@ -252,30 +256,37 @@ for_block:FOR '(' expression_stmt  expression_stmt ')' {is_loop = 1;} stmt {is_l
     		 ;
 
 if_block:IF '(' expression ')' M stmt 	%prec LOWER_THAN_ELSE 		{
-																																		backpatch($3.truelist,$5.instr);
-																																		$$.nextlist = merge($3.falselist,$6.nextlist);
+																																		backpatch($3->truelist,$5);
+
+																																		$$ = new content_t();
+																																		$$->nextlist = merge($3->falselist,$6->nextlist);
 																																	}
 
 				|IF '(' expression ')' M stmt N ELSE M stmt								{
-																																		backpatch($3.truelist,$5.instr);
-																																		backpatch($3.falselist,$9.instr);
-																																		$$.nextlist = merge(merge($6.nextlist,$7.nextlist),$10.nextlist);
+																																		backpatch($3->truelist,$5);
+																																		backpatch($3->falselist,$9);
+
+																																		$$ = new content_t();
+																																		vector<int> temp = merge($6->nextlist,*$7);
+																																		$$->nextlist = merge(temp,$10->nextlist);
 																																	}
     ;
 
 while_block: WHILE M '(' expression	')' M {is_loop = 1;} stmt {is_loop = 0;}		{
-																																									backpatch($8.nextlist,$2.instr);
-																																									backpatch($4.truelist,$6.instr);
-																																									$$.nextlist = $4.falselist;
+																																									backpatch($8->nextlist,$2);
+																																									backpatch($4->truelist,$6);
+
+																																									$$ = new content_t();
+																																									$$->nextlist = $4->falselist;
 
 																																									std::string instruction;
-																																									instruction = std::to_string(nextinstr) + ": " + "goto" + $2.instr;
-																																									outfile << instruction << endl;
+																																									instruction = to_string(nextinstr) + string(": ") + string("goto") + to_string($2);
+																																									ICG.push_back(instruction);
 																																									nextinstr++;
 																																								}
 		;
 
-declaration: type  declaration_list ';'					{is_declaration = 0; }
+declaration: type  declaration_list ';'					{is_declaration = 0; rhs = 0;}
 					 | declaration_list ';'
 					 | unary_expr ';'
 
@@ -294,126 +305,163 @@ expression_stmt: expression ';'
     					 | ';'
     			 		 ;
 
-expression: expression ',' sub_expr									{$$.truelist = $3.truelist; $$.falselist = $3.falselist;}
-    			| sub_expr																{$$.truelist = $1.truelist; $$.falselist = $1.falselist;}
+expression: expression ',' sub_expr									{$$ = new content_t(); $$->truelist = $3->truelist; $$->falselist = $3->falselist;}
+    			| sub_expr																{$$ = new content_t(); $$->truelist = $1->truelist; $$->falselist = $1->falselist;}
 					;
 
 sub_expr:
 
-		sub_expr rel sub_expr																{
-																													type_check($1,$3,2);
-																													$$.data_type = $1.data_type;
+		sub_expr '>' sub_expr																{
+																													type_check($1->data_type,$3->data_type,2);
 
-																													$$.truelist = {nextinstr};
-																													$$.falselist = {nextinstr + 1};
+																													$$ = new content_t();
+																													gencode_rel($$, $1, $3, string(">"));
+																												}
 
-																													std::string instruction;
-																													instruction = std::to_string(nextinstr) + ": " + "if" + $1.addr + $2.op + $3.addr + "goto _";
-																													outfile << instruction << endl;
-																													nextinstr++;
+		| sub_expr '<' sub_expr															{
+																													type_check($1->data_type,$3->data_type,2);
+
+																													$$ = new content_t();
+																													gencode_rel($$, $1, $3, string("<"));
+																												}
+
+		| sub_expr EQ sub_expr															{
+																													type_check($1->data_type,$3->data_type,2);
+
+																													$$ = new content_t();
+																													gencode_rel($$, $1, $3, string("=="));
+																												}
+
+		| sub_expr NOT_EQ sub_expr													{
+																													type_check($1->data_type,$3->data_type,2);
+
+																													$$ = new content_t();
+																													gencode_rel($$, $1, $3, string("!="));
+																												}
+
+		| sub_expr GR_EQ sub_expr														{
+																													type_check($1->data_type,$3->data_type,2);
+
+																													$$ = new content_t();
+																													gencode_rel($$, $1, $3, string(">="));
+																												}
+
+		| sub_expr LS_EQ sub_expr														{
+
+																													type_check($1->data_type,$3->data_type,2);
+
+																													$$ = new content_t();
+																													gencode_rel($$, $1, $3, string("<="));
 																												}
 
 		|sub_expr LOGICAL_AND M sub_expr										{
-																													type_check($1.data_type,$4.data_type,2);
-																													$$.data_type = $1.data_type;
+																													type_check($1->data_type,$4->data_type,2);
 
-																													backpatch($1.truelist,$3.instr);
-																													$$.truelist = $4.truelist;
-																													$$.falselist = merge($1.falselist,$4.falselist);
+																													$$ = new content_t();
+																													$$->data_type = $1->data_type;
+
+																													backpatch($1->truelist,$3);
+																													$$->truelist = $4->truelist;
+																													$$->falselist = merge($1->falselist,$4->falselist);
 																												}
 
 		|sub_expr LOGICAL_OR M sub_expr											{
-																													type_check($1.data_type,$4.data_type,2);
-																													$$.data_type = $1.data_type;
+																													type_check($1->data_type,$4->data_type,2);
 
-																													backpatch($1.falselist,$3.instr);
-																													$$.truelist = merge($1.truelist,$4.truelist);
-																													$$.falselist = $4.falselist;
+																													$$ = new content_t();
+																													$$->data_type = $1->data_type;
+
+																													backpatch($1->falselist,$3);
+																													$$->truelist = merge($1->truelist,$4->truelist);
+																													$$->falselist = $4->falselist;
 																												}
 
 		|'!' sub_expr																				{
-																													$$.data_type = $2.data_type;
+																													$$ = new content_t();
+																													$$->data_type = $2->data_type;
 
-																													$$.truelist = $2.falselist;
-																													$$.falselist = $2.truelist;
+																													$$->truelist = $2->falselist;
+																													$$->falselist = $2->truelist;
 																												}
-		|arithmetic_expr																		{$$ = $1;}
-    |assignment_expr																		{$$ = $1;}
-		|unary_expr																					{$$ = $1;}
+
+		|arithmetic_expr																		{$$ = new content_t(); $$->data_type = $1->data_type; $$->addr = $1->addr;}
+    |assignment_expr																		{$$ = new content_t(); $$->data_type = $1->data_type;}
+		|unary_expr																					{$$ = new content_t(); $$->data_type = $1->data_type;}
     ;
-
-
-rel: '>'																								{$$.op = ">";}
-	 | '<'																								{$$.op = "<";}
-	 | EQ                                                 {$$.op = "==";}
-	 | NOT_EQ                                             {$$.op = "!=";}
-	 | LS_EQ																							{$$.op = "<=";}
-	 | GR_EQ																							{$$.op = ">=";}
-	 ;
 
 assignment_expr :
 		lhs assign arithmetic_expr												{
-																											 type_check($1->data_type,$3.data_type,1);
-																											 $$.data_type = $3.data_type;
+																											 type_check($1->entry->data_type,$3->data_type,1);
 
-																											 $$.code = $1->lexeme + $2.op + $3.addr;
+																											 $$ = new content_t();
+																											 $$->data_type = $3->data_type;
+
+																											 $$->code = $1->entry->lexeme + *$2 + $3->addr;
 
 																											 std::string instruction;
-																											 instruction = std::to_string(nextinstr) + $$.code;
-																											 outfile << instruction << endl;
+
+																											 instruction = to_string(nextinstr) + string(": ") + $$->code;
+																											 ICG.push_back(instruction);
 																											 nextinstr++;
+
 																											}
 
     |lhs assign array_access													{
-																											 type_check($1->data_type,$3.data_type,1);
-																											 $$.data_type = $3.data_type;
+																											 type_check($1->entry->data_type,$3->data_type,1);
 
-																											 $$.code = $1->lexeme + $2.op + $3.code;
+																											 $$ = new content_t();
+																											 $$->data_type = $3->data_type;
+
+																											 $$->code = $1->entry->lexeme + *$2 + $3->code;
 
 																											 std::string instruction;
-																											 instruction = std::to_string(nextinstr) + $$.code;
-																											 outfile << instruction << endl;
+																											 instruction = to_string(nextinstr) + string(": ") + $$->code;
+																											 ICG.push_back(instruction);
 																											 nextinstr++;
 																											}
 
-    |lhs assign function_call													{type_check($1->data_type,$3,1); $$.data_type = $3;}
+    |lhs assign function_call													{type_check($1->entry->data_type,$3,1); $$ = new content_t(); $$->data_type = $3;}
 
 		|lhs assign unary_expr                            {
-																											 type_check($1->data_type,$3.data_type,1);
-																											 $$.data_type = $3.data_type;
+																											 type_check($1->entry->data_type,$3->data_type,1);
 
-																											 $$.code = $1->lexeme + $2.op + $3.code;
+																											 $$ = new content_t();
+																											 $$->data_type = $3->data_type;
+
+																											 $$->code = $1->entry->lexeme + *$2 + $3->code;
 
 																											 std::string instruction;
-																											 instruction = std::to_string(nextinstr) + $$.code;
-																											 outfile << instruction << endl;
+																											 instruction = to_string(nextinstr) + string(": ") + $$->code;
+																											 ICG.push_back(instruction);
 																											 nextinstr++;
 																										 	}
 
 		|unary_expr assign unary_expr											{
-																											 type_check($1.data_type,$3.data_type,1);
-																											 $$.data_type = $3.data_type;
+																											 type_check($1->data_type,$3->data_type,1);
 
-																											 $$.code = $1.code + $2.op + $3.code;
+																											 $$ = new content_t();
+																											 $$->data_type = $3->data_type;
+
+																											 $$->code = $1->code + *$2 + $3->code;
 
 																											 std::string instruction;
-																											 instruction = std::to_string(nextinstr) + $$.code;
-																											 outfile << instruction << endl;
+																											 instruction = to_string(nextinstr) + string(": ") + $$->code;
+																											 ICG.push_back(instruction);
 																											 nextinstr++;
 																										 	}
     ;
 
-unary_expr:	identifier INCREMENT												{$$.data_type = $1->data_type; $$.code = $1->lexeme + "++";}
-					| identifier DECREMENT												{$$.data_type = $1->data_type; $$.code = $1->lexeme + "--";}
-					| DECREMENT identifier												{$$.data_type = $2->data_type; $$.code = "--" + $2->lexeme;}
-					| INCREMENT identifier												{$$.data_type = $2->data_type; $$.code = "++" + $2->lexeme;}
+unary_expr:	identifier INCREMENT												{$$ = new content_t(); $$->data_type = $1->data_type; $$->code = string($1->lexeme) + string("++");}
+					| identifier DECREMENT												{$$ = new content_t(); $$->data_type = $1->data_type; $$->code = string($1->lexeme) + string("--");}
+					| DECREMENT identifier												{$$ = new content_t(); $$->data_type = $2->data_type; $$->code = string("--") + string($2->lexeme);}
+					| INCREMENT identifier												{$$ = new content_t(); $$->data_type = $2->data_type; $$->code = string("++") + string($2->lexeme);}
 
-lhs: identifier																					{$$ = $1;}
-   | array_access																				{$$ = $1.entry;}
+lhs: identifier																					{$$ = new content_t(); $$->entry = $1;}
+   | array_access																				{$$ = new content_t(); $$->code = $1->code;}
 	 ;
 
 identifier:IDENTIFIER                                    {
-                                                          if(is_declaration && !rhs)
+                                                          /* if(is_declaration && !rhs)
                                                           {
                                                             $1 = insert(SYMBOL_TABLE,yytext,INT_MAX,current_dtype);
                                                             if($1 == NULL) yyerror("Redeclaration of variable");
@@ -426,64 +474,104 @@ identifier:IDENTIFIER                                    {
                                                             rhs = 0;
                                                           }
 
-                                                          $$ = $1;
+                                                          $$ = $1; */
+
+																													if(is_declaration && !rhs)
+																													{
+																															$1 = insert(SYMBOL_TABLE,yytext,INT_MAX,current_dtype);
+																															if($1 == NULL) yyerror("Redeclaration of variable");
+																													}
+																													else
+																													{
+																															$1 = search_recursive(yytext);
+																															if($1 == NULL) yyerror("Variable not declared");
+																													}
+																													$$ = $1;
                                                          }
     			 ;
 
-assign:'=' 																{rhs=1; $$ = "="; }
-    |ADD_ASSIGN 													{rhs=1; $$ = "+=";}
-    |SUB_ASSIGN 													{rhs=1; $$ = "-=";}
-    |MUL_ASSIGN 													{rhs=1; $$ = "*=";}
-    |DIV_ASSIGN 													{rhs=1;	$$ = "/=";}
-    |MOD_ASSIGN 													{rhs=1; $$ = "%=";}
+assign:'=' 																{rhs=1; $$ = new string("=");}
+    |ADD_ASSIGN 													{rhs=1; $$ = new string("+=");}
+    |SUB_ASSIGN 													{rhs=1; $$ = new string("-=");}
+    |MUL_ASSIGN 													{rhs=1; $$ = new string("*=");}
+    |DIV_ASSIGN 													{rhs=1;	$$ = new string("/=");}
+    |MOD_ASSIGN 													{rhs=1; $$ = new string("%=");}
     ;
 
-arithmetic_expr: arithmetic_expr math arithmetic_expr								 {
-																																			type_check($1.data_type,$3.data_type,0);
+arithmetic_expr: arithmetic_expr '+' arithmetic_expr								 {
+																																			type_check($1->data_type,$3->data_type,0);
+																																			$$ = new content_t();
 
-																																			$$.addr = "t" + std::to_string(temp_var_number);
-																																			std::string expr = $$.addr + "=" + $1.addr + $2.op + $2.addr;
-																																			$$.code = $1.code + $3.code + expr;
+																																			$$->data_type = $1->data_type;
+																																			gencode_math($$, $1, $3, string("+"));
+																																		 }
 
-																																			temp_var_number++;
+							  | arithmetic_expr '-' arithmetic_expr								 {
+																																			 type_check($1->data_type,$3->data_type,0);
+																																			 $$ = new content_t();
+
+																																			 $$->data_type = $1->data_type;
+																																			 gencode_math($$, $1, $3, string("-"));
+								 																										 }
+
+								| arithmetic_expr '*' arithmetic_expr								 {
+																																			 type_check($1->data_type,$3->data_type,0);
+																																			 $$ = new content_t();
+
+																																			 $$->data_type = $1->data_type;
+																																			 gencode_math($$, $1, $3, string("*"));
+								 																										 }
+
+
+							| arithmetic_expr '/' arithmetic_expr									 {
+																																			type_check($1->data_type,$3->data_type,0);
+																																			$$ = new content_t();
+
+																																			$$->data_type = $1->data_type;
+																																			gencode_math($$, $1, $3, string("/"));
+																																		 }
+
+							 | arithmetic_expr '%' arithmetic_expr									 {
+																																				type_check($1->data_type,$3->data_type,0);
+																																				$$ = new content_t();
+
+																																				$$->data_type = $1->data_type;
+																																				gencode_math($$, $1, $3, string("%"));
 																																		 }
 
 							 |'(' arithmetic_expr ')'															 {
-								 																											$$.data_type = $2.data_type;
+								 																											$$ = new content_t();
+								 																											$$->data_type = $2->data_type;
 
-																																			$$.addr = $2.addr;
-																																			$$.code = $2.code;
+																																			$$->addr = $2->addr;
+																																			$$->code = $2->code;
 																																		 }
 
     			 		 |'-' arithmetic_expr %prec UMINUS										 {
-								 																											$$.data_type = $2.data_type;
+								 																											$$ = new content_t();
+								 																											$$->data_type = $2->data_type;
 
-																																			$$.addr = "t" + std::to_string(temp_var_number);
-																																			std::string expr = $$.addr + "=" + "-" + $2.addr;
-																																			$$.code = $2.code + expr;
+																																			$$->addr = "t" + to_string(temp_var_number);
+																																			std::string expr = $$->addr + "=" + "-" + $2->addr;
+																																			$$->code = $2->code + expr;
 
 																																			temp_var_number++;
 																																		 }
 
     			 		 |identifier																					 {
-								 																										  $$.data_type = $1->data_type;
+								 																											$$ = new content_t();
+								 																										  $$->data_type = $1->data_type;
 
-																																		 	$$.addr = $1->lexeme;
+																																		 	$$->addr = $1->lexeme;
 																																	   }
 
     			 		 |constant																						 {
-								 																											$$.data_type = $1->data_type;
+								 																											$$ = new content_t();
+								 																											$$->data_type = $1->data_type;
 
-																																			$$.addr = $1->value;
+																																			$$->addr = to_string($1->value);
 																																		 }
     			 		 ;
-
-math: '+'										{$$.op = "+";}
-		| '-'										{$$.op = "-";}
-		| '*'										{$$.op = "*";}
-		| '/'										{$$.op = "/";}
-		| '%'										{$$.op = "%";}
-		;
 
 constant: DEC_CONSTANT 												{$1->is_constant=1; $$ = $1;}
     | HEX_CONSTANT														{$1->is_constant=1; $$ = $1;}
@@ -510,13 +598,15 @@ array_access: identifier '[' array_index ']'								{
 																																	yyerror("Array index cannot be negative");
 																															}
 
-																															$$.data_type = $1.data_type;
+																															$$ = new content_t();
+																															$$->data_type = $1->data_type;
 
 																															if($3->is_constant)
-																																$$.code = $1->lexeme + "[" + $3->value + "]";
+																																$$->code = string($1->lexeme) + string("[") + to_string($3->value) + string("]");
 																															else
-																																$$.code = $1->lexeme + "[" + $3->lexeme + "]";
-																															$$.entry = $1;
+																																$$->code = string($1->lexeme) + string("[") + string($3->lexeme) + string("]");
+
+																															$$->entry = $1;
 																														}
 
 array_index: constant																		{$$ = $1;}
@@ -541,20 +631,74 @@ parameter_list:
               |parameter
               ;
 
-parameter: sub_expr																			{param_list[p_idx++] = $1;}
+parameter: sub_expr																			{param_list[p_idx++] = $1->data_type;}
 				 | STRING																				{param_list[p_idx++] = STRING;}
 				 ;
 
-M: 	 		{$$.instr = nextinstr;}
+M: 	 		{$$ = nextinstr;}
+ ;
+
 N:			{
-					$$.nextlist = {nextinstr};
+					$$ = new vector<int>(nextinstr);
 
 					std::string instruction;
-					instruction = std::to_string(nextinstr)  + ": " + "goto _";
-					outfile << instruction << endl;
+					instruction = to_string(nextinstr)  + ": " + "goto _";
+					ICG.push_back(instruction);
 					nextinstr++;
 				}
+	;
+
 %%
+
+void gencode_rel(content_t* & lhs, content_t* arg1, content_t* arg2, const string& op)
+{
+	lhs->data_type = arg1->data_type;
+
+	lhs->truelist = {nextinstr};
+	lhs->falselist = {nextinstr + 1};
+
+	std::string instruction;
+
+	instruction = to_string(nextinstr) + string(": ") + string("if") + arg1->addr + op + arg2->addr + string("goto _");
+	ICG.push_back(instruction);
+	nextinstr++;
+
+	instruction = to_string(nextinstr) + string(": ") + string("goto _");
+	ICG.push_back(instruction);
+	nextinstr++;
+}
+
+void gencode_math(content_t* & lhs, content_t* arg1, content_t* arg2, const string& op)
+{
+	lhs->addr = "t" + to_string(temp_var_number);
+	std::string expr = lhs->addr + string("=") + arg1->addr + op + arg2->addr;
+	lhs->code = arg1->code + arg2->code + expr;
+
+	temp_var_number++;
+
+	string instruction = to_string(nextinstr) + string(": ") + expr;
+	nextinstr++;
+	ICG.push_back(instruction);
+}
+
+void backpatch(vector<int>& v1, int number)
+{
+	for(int i = 0; i<v1.size(); i++)
+	{
+		string instruction = ICG[v1[i]];
+
+		if(instruction.find("_") < instruction.size())
+		{
+			instruction.replace(instruction.find("_"),1,to_string(number));
+			ICG[v1[i]] = instruction;
+		}
+		else
+		{
+			printf("Error while backpatching!\n");
+			cout << instruction << endl;
+		}
+	}
+}
 
 vector<int> merge(vector<int>& v1, vector<int>& v2)
 {
@@ -579,6 +723,16 @@ void type_check(int left, int right, int flag)
 	}
 }
 
+void displayICG()
+{
+	ofstream outfile("ICG.code");
+
+	for(int i=0; i<ICG.size();i++)
+	outfile << ICG[i] <<endl;
+
+	outfile.close();
+}
+
 int main(int argc, char *argv[])
 {
 	 int i;
@@ -592,8 +746,6 @@ int main(int argc, char *argv[])
   symbol_table_list[0].symbol_table = create_table();
 	yyin = fopen(argv[1], "r");
 
-	ofstream outfile("ICG.code");
-
 	if(!yyparse())
 	{
 		printf("\nPARSING COMPLETE\n\n\n");
@@ -603,19 +755,20 @@ int main(int argc, char *argv[])
 			printf("\nPARSING FAILED!\n\n\n");
 	}
 
-
 	printf("SYMBOL TABLES\n\n");
 	display_all();
 
 	printf("CONSTANT TABLE");
 	display_constant_table(constant_table);
 
+	displayICG();
+
 
 	fclose(yyin);
 	return 0;
 }
 
-int yyerror(char *msg)
+int yyerror(const char *msg)
 {
 	printf("Line no: %d Error message: %s Token: %s\n", yylineno, msg, yytext);
 	exit(0);
