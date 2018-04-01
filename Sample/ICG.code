@@ -1,12 +1,16 @@
-0: ifa<bgoto 2
-1: goto 7
-2: ifc>dgoto 4
-3: goto 7
-4: a=10
-5: b=10
-6: goto 8
-7: c=10
-8: ifc==dgoto 10
-9: goto 11
-10: d=10
-11: exit
+0: if a < b goto 2
+1: goto 6
+2: if c > d goto 4
+3: goto 6
+4: a = 10
+5: goto 7
+6: c = 10
+7: if a > b goto 9
+8: goto 14
+9: if c > d goto 11
+10: goto 12
+11: goto 7
+12: a = c
+13: goto 7
+14: b = d
+15: exit

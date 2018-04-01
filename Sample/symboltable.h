@@ -55,6 +55,8 @@ struct content_t
 	vector<int> truelist;
 	vector<int> falselist;
 	vector<int> nextlist;
+	vector<int> breaklist;
+	vector<int> continuelist;
 	string addr;
 	string code;
 
@@ -109,7 +111,7 @@ int myhash( char *lexeme )
 	/* Apply jenkin's myhash function
 	* https://en.wikipedia.org/wiki/Jenkins_hash_function#one-at-a-time
 	*/
-	
+
 	for ( hashvalue = i = 0; i < strlen(lexeme); ++i ) {
         hashvalue += lexeme[i];
         hashvalue += ( hashvalue << 10 );

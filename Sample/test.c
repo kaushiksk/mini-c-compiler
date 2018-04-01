@@ -5,13 +5,17 @@ int main()
 
   if(a<b && c>d){
     a=10;
-    b=10;
   }
   else{
     c=10;
   }
-  if(c==d)
-    d=10;
+  while(a>b){
+    if(c>d)
+      continue;
+    a = c;
+  }
+  b = d;
+
   /*
   a = b + 5;
   b = a * 9;*/

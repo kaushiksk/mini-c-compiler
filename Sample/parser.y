@@ -189,8 +189,8 @@ arg : type identifier									{param_list[p_idx++] = $2->data_type;}
     ;
 
  /* Generic statement. Can be compound or a single statement */
-stmt:compound_stmt										{$$ = new content_t(); $$->nextlist = $1->nextlist;}
-    |single_stmt											{$$ = new content_t(); $$->nextlist = $1->nextlist;}
+stmt:compound_stmt										{$$ = new content_t(); $$=$1;}
+    |single_stmt											{$$ = new content_t(); $$=$1;}
     ;
 
  /* The function body is covered in braces and has multiple statements. */
@@ -206,7 +206,7 @@ compound_stmt :
 																	current_scope = exit_scope();
 
 																	$$ = new content_t();
-																	$$->nextlist = $3->nextlist;
+																	$$ = $3;
 																//	printlist($3->nextlist);
 																	//cout<<yytext<<endl;
 
@@ -218,6 +218,8 @@ statements:statements M stmt		{
 
 																	$$ = new content_t();
 																	$$->nextlist = $3->nextlist;
+																	$$->breaklist = merge($1->breaklist,$3->breaklist);
+																	$$->continuelist = merge($1->continuelist,$3->continuelist);
 																}
 
     |														{
@@ -226,9 +228,17 @@ statements:statements M stmt		{
     ;
 
  /* Grammar for what constitutes every individual statement */
-single_stmt :if_block						{$$ = new content_t(); $$->nextlist = $1->nextlist;backpatch($$->nextlist, nextinstr);}
+single_stmt :if_block						{
+																	$$ = new content_t();
+																  $$ = $1;
+																  backpatch($$->nextlist, nextinstr);
+
+															}
     |for_block									{$$ = new content_t();}
-    |while_block								{$$ = new content_t(); $$->nextlist = $1->nextlist;}
+    |while_block								{
+																	$$ = new content_t();
+																	$$ = $1;
+																	backpatch($$->nextlist, nextinstr);}
     |declaration								{$$ = new content_t();}
     |function_call ';'					{$$ = new content_t();}
 		|RETURN ';'								  {
@@ -240,8 +250,25 @@ single_stmt :if_block						{$$ = new content_t(); $$->nextlist = $1->nextlist;ba
 																  else yyerror("return statement not inside function definition");
 																}
 
-		|CONTINUE ';'							 {if(!is_loop) {yyerror("Illegal use of continue");}}
-		|BREAK ';'                 {if(!is_loop) {yyerror("Illegal use of break");}}
+		|CONTINUE ';'							 {
+																	if(!is_loop) {yyerror("Illegal use of continue");}
+																	$$ = new content_t();
+																	$$->continuelist = {nextinstr};
+																	std::string instruction;
+																	instruction = to_string(nextinstr)  + ": " + "goto _";
+																	ICG.push_back(instruction);
+																	nextinstr++;
+
+																}
+		|BREAK ';'                 {
+																		if(!is_loop) {yyerror("Illegal use of break");}
+																		$$ = new content_t();
+																		$$->breaklist = {nextinstr};
+																		std::string instruction;
+																		instruction = to_string(nextinstr)  + ": " + "goto _";
+																		ICG.push_back(instruction);
+																		nextinstr++;
+																}
 
 		|RETURN sub_expr ';'			 {
 																	if(is_func)
@@ -262,7 +289,9 @@ if_block:IF '(' expression ')' M stmt 	%prec LOWER_THAN_ELSE 		{
 
 																																		$$ = new content_t();
 																																		$$->nextlist = merge($3->falselist,$6->nextlist);
-																																	//	printlist($$->nextlist);
+																																		$$->breaklist = $6->breaklist;
+																																		$$->continuelist = $6->continuelist;
+																																		//printlist($$->breaklist);
 																																	}
 
 				|IF '(' expression ')' M stmt  ELSE N M stmt								{
@@ -274,6 +303,8 @@ if_block:IF '(' expression ')' M stmt 	%prec LOWER_THAN_ELSE 		{
 																																		vector<int> temp = merge($6->nextlist,$8->nextlist);
 																																	//	printlist($8->nextlist);
 																																		$$->nextlist = merge(temp,$10->nextlist);
+																																		$$->breaklist = merge($10->breaklist,$6->breaklist);
+																																		$$->continuelist = merge($10->continuelist,$6->continuelist);
 																																	//	printlist($$->nextlist);
 																																	}
     ;
@@ -281,12 +312,14 @@ if_block:IF '(' expression ')' M stmt 	%prec LOWER_THAN_ELSE 		{
 while_block: WHILE M '(' expression	')' M {is_loop = 1;} stmt {is_loop = 0;}		{
 																																									backpatch($8->nextlist,$2);
 																																									backpatch($4->truelist,$6);
+																																									backpatch($8->continuelist, $2);
 
 																																									$$ = new content_t();
-																																									$$->nextlist = $4->falselist;
+																																									$$->nextlist = merge($4->falselist,$8->breaklist);
+																																								//		printlist($8->breaklist);
 
 																																									std::string instruction;
-																																									instruction = to_string(nextinstr) + string(": ") + string("goto") + to_string($2);
+																																									instruction = to_string(nextinstr) + string(": ") + string("goto ") + to_string($2);
 																																									ICG.push_back(instruction);
 																																									nextinstr++;
 																																								}
@@ -321,35 +354,35 @@ sub_expr:
 																													type_check($1->data_type,$3->data_type,2);
 
 																													$$ = new content_t();
-																													gencode_rel($$, $1, $3, string(">"));
+																													gencode_rel($$, $1, $3, string(" > "));
 																												}
 
 		| sub_expr '<' sub_expr															{
 																													type_check($1->data_type,$3->data_type,2);
 
 																													$$ = new content_t();
-																													gencode_rel($$, $1, $3, string("<"));
+																													gencode_rel($$, $1, $3, string(" < "));
 																												}
 
 		| sub_expr EQ sub_expr															{
 																													type_check($1->data_type,$3->data_type,2);
 
 																													$$ = new content_t();
-																													gencode_rel($$, $1, $3, string("=="));
+																													gencode_rel($$, $1, $3, string(" == "));
 																												}
 
 		| sub_expr NOT_EQ sub_expr													{
 																													type_check($1->data_type,$3->data_type,2);
 
 																													$$ = new content_t();
-																													gencode_rel($$, $1, $3, string("!="));
+																													gencode_rel($$, $1, $3, string(" != "));
 																												}
 
 		| sub_expr GR_EQ sub_expr														{
 																													type_check($1->data_type,$3->data_type,2);
 
 																													$$ = new content_t();
-																													gencode_rel($$, $1, $3, string(">="));
+																													gencode_rel($$, $1, $3, string(" >= "));
 																												}
 
 		| sub_expr LS_EQ sub_expr														{
@@ -357,7 +390,7 @@ sub_expr:
 																													type_check($1->data_type,$3->data_type,2);
 
 																													$$ = new content_t();
-																													gencode_rel($$, $1, $3, string("<="));
+																													gencode_rel($$, $1, $3, string(" <= "));
 																												}
 
 		|sub_expr LOGICAL_AND M sub_expr										{
@@ -501,12 +534,12 @@ identifier:IDENTIFIER                                    {
                                                          }
     			 ;
 
-assign:'=' 																{rhs=1; $$ = new string("=");}
-    |ADD_ASSIGN 													{rhs=1; $$ = new string("+=");}
-    |SUB_ASSIGN 													{rhs=1; $$ = new string("-=");}
-    |MUL_ASSIGN 													{rhs=1; $$ = new string("*=");}
-    |DIV_ASSIGN 													{rhs=1;	$$ = new string("/=");}
-    |MOD_ASSIGN 													{rhs=1; $$ = new string("%=");}
+assign:'=' 																{rhs=1; $$ = new string(" = ");}
+    |ADD_ASSIGN 													{rhs=1; $$ = new string(" += ");}
+    |SUB_ASSIGN 													{rhs=1; $$ = new string(" -= ");}
+    |MUL_ASSIGN 													{rhs=1; $$ = new string(" *= ");}
+    |DIV_ASSIGN 													{rhs=1;	$$ = new string(" /= ");}
+    |MOD_ASSIGN 													{rhs=1; $$ = new string(" %= ");}
     ;
 
 arithmetic_expr: arithmetic_expr '+' arithmetic_expr								 {
@@ -514,7 +547,7 @@ arithmetic_expr: arithmetic_expr '+' arithmetic_expr								 {
 																																			$$ = new content_t();
 
 																																			$$->data_type = $1->data_type;
-																																			gencode_math($$, $1, $3, string("+"));
+																																			gencode_math($$, $1, $3, string(" + "));
 																																		 }
 
 							  | arithmetic_expr '-' arithmetic_expr								 {
@@ -522,7 +555,7 @@ arithmetic_expr: arithmetic_expr '+' arithmetic_expr								 {
 																																			 $$ = new content_t();
 
 																																			 $$->data_type = $1->data_type;
-																																			 gencode_math($$, $1, $3, string("-"));
+																																			 gencode_math($$, $1, $3, string(" - "));
 								 																										 }
 
 								| arithmetic_expr '*' arithmetic_expr								 {
@@ -530,7 +563,7 @@ arithmetic_expr: arithmetic_expr '+' arithmetic_expr								 {
 																																			 $$ = new content_t();
 
 																																			 $$->data_type = $1->data_type;
-																																			 gencode_math($$, $1, $3, string("*"));
+																																			 gencode_math($$, $1, $3, string(" * "));
 								 																										 }
 
 
@@ -539,7 +572,7 @@ arithmetic_expr: arithmetic_expr '+' arithmetic_expr								 {
 																																			$$ = new content_t();
 
 																																			$$->data_type = $1->data_type;
-																																			gencode_math($$, $1, $3, string("/"));
+																																			gencode_math($$, $1, $3, string(" / "));
 																																		 }
 
 							 | arithmetic_expr '%' arithmetic_expr									 {
@@ -547,7 +580,7 @@ arithmetic_expr: arithmetic_expr '+' arithmetic_expr								 {
 																																				$$ = new content_t();
 
 																																				$$->data_type = $1->data_type;
-																																				gencode_math($$, $1, $3, string("%"));
+																																				gencode_math($$, $1, $3, string(" % "));
 																																		 }
 
 							 |'(' arithmetic_expr ')'															 {
@@ -563,7 +596,7 @@ arithmetic_expr: arithmetic_expr '+' arithmetic_expr								 {
 								 																											$$->data_type = $2->data_type;
 
 																																			$$->addr = "t" + to_string(temp_var_number);
-																																			std::string expr = $$->addr + "=" + "-" + $2->addr;
+																																			std::string expr = $$->addr + " = " + "minus " + $2->addr;
 																																			$$->code = $2->code + expr;
 
 																																			temp_var_number++;
@@ -671,7 +704,7 @@ void gencode_rel(content_t* & lhs, content_t* arg1, content_t* arg2, const strin
 
 	std::string instruction;
 
-	instruction = to_string(nextinstr) + string(": ") + string("if") + arg1->addr + op + arg2->addr + string("goto _");
+	instruction = to_string(nextinstr) + string(": ") + string("if ") + arg1->addr + op + arg2->addr + string(" goto _");
 	ICG.push_back(instruction);
 	nextinstr++;
 
@@ -683,7 +716,7 @@ void gencode_rel(content_t* & lhs, content_t* arg1, content_t* arg2, const strin
 void gencode_math(content_t* & lhs, content_t* arg1, content_t* arg2, const string& op)
 {
 	lhs->addr = "t" + to_string(temp_var_number);
-	std::string expr = lhs->addr + string("=") + arg1->addr + op + arg2->addr;
+	std::string expr = lhs->addr + string(" = ") + arg1->addr + op + arg2->addr;
 	lhs->code = arg1->code + arg2->code + expr;
 
 	temp_var_number++;
@@ -743,7 +776,7 @@ void displayICG()
 
 	for(int i=0; i<ICG.size();i++)
 	outfile << ICG[i] <<endl;
-	outfile<<nextinstr<<": exit"<<endl;
+	outfile<<nextinstr<<": exit";
 	outfile.close();
 }
 

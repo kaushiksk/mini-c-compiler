@@ -553,16 +553,16 @@ static const yytype_uint16 yyrline[] =
        0,   117,   117,   118,   121,   122,   127,   133,   126,   147,
      149,   153,   154,   157,   158,   161,   162,   165,   166,   167,
      168,   169,   170,   171,   172,   173,   174,   179,   180,   183,
-     184,   188,   192,   193,   198,   198,   216,   223,   229,   230,
-     231,   232,   233,   234,   243,   244,   246,   256,   256,   257,
-     257,   260,   268,   281,   281,   281,   295,   296,   297,   300,
-     301,   304,   305,   306,   310,   311,   314,   315,   320,   327,
-     334,   341,   348,   355,   363,   374,   385,   393,   394,   395,
-     399,   415,   429,   431,   445,   460,   461,   462,   463,   465,
-     466,   469,   504,   505,   506,   507,   508,   509,   512,   520,
-     528,   537,   545,   553,   561,   572,   579,   587,   588,   589,
-     590,   593,   623,   624,   627,   633,   641,   642,   645,   646,
-     649,   652
+     184,   188,   192,   193,   198,   198,   216,   225,   231,   237,
+     238,   242,   243,   244,   253,   263,   273,   283,   283,   284,
+     284,   287,   297,   312,   312,   312,   328,   329,   330,   333,
+     334,   337,   338,   339,   343,   344,   347,   348,   353,   360,
+     367,   374,   381,   388,   396,   407,   418,   426,   427,   428,
+     432,   448,   462,   464,   478,   493,   494,   495,   496,   498,
+     499,   502,   537,   538,   539,   540,   541,   542,   545,   553,
+     561,   570,   578,   586,   594,   605,   612,   620,   621,   622,
+     623,   626,   656,   657,   660,   666,   674,   675,   678,   679,
+     682,   685
 };
 #endif
 
@@ -1636,13 +1636,13 @@ yyreduce:
 
   case 32:
 #line 192 "parser.y" /* yacc.c:1646  */
-    {(yyval.content) = new content_t(); (yyval.content)->nextlist = (yyvsp[0].content)->nextlist;}
+    {(yyval.content) = new content_t(); (yyval.content)=(yyvsp[0].content);}
 #line 1641 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
 #line 193 "parser.y" /* yacc.c:1646  */
-    {(yyval.content) = new content_t(); (yyval.content)->nextlist = (yyvsp[0].content)->nextlist;}
+    {(yyval.content) = new content_t(); (yyval.content)=(yyvsp[0].content);}
 #line 1647 "y.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1661,7 +1661,7 @@ yyreduce:
 																	current_scope = exit_scope();
 
 																	(yyval.content) = new content_t();
-																	(yyval.content)->nextlist = (yyvsp[-1].content)->nextlist;
+																	(yyval.content) = (yyvsp[-1].content);
 																//	printlist($3->nextlist);
 																	//cout<<yytext<<endl;
 
@@ -1676,50 +1676,60 @@ yyreduce:
 
 																	(yyval.content) = new content_t();
 																	(yyval.content)->nextlist = (yyvsp[0].content)->nextlist;
+																	(yyval.content)->breaklist = merge((yyvsp[-2].content)->breaklist,(yyvsp[0].content)->breaklist);
+																	(yyval.content)->continuelist = merge((yyvsp[-2].content)->continuelist,(yyvsp[0].content)->continuelist);
 																}
-#line 1681 "y.tab.c" /* yacc.c:1646  */
+#line 1683 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 223 "parser.y" /* yacc.c:1646  */
+#line 225 "parser.y" /* yacc.c:1646  */
     {
 																	(yyval.content) = new content_t();
 																}
-#line 1689 "y.tab.c" /* yacc.c:1646  */
+#line 1691 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 229 "parser.y" /* yacc.c:1646  */
-    {(yyval.content) = new content_t(); (yyval.content)->nextlist = (yyvsp[0].content)->nextlist;backpatch((yyval.content)->nextlist, nextinstr);}
-#line 1695 "y.tab.c" /* yacc.c:1646  */
+#line 231 "parser.y" /* yacc.c:1646  */
+    {
+																	(yyval.content) = new content_t();
+																  (yyval.content) = (yyvsp[0].content);
+																  backpatch((yyval.content)->nextlist, nextinstr);
+
+															}
+#line 1702 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 230 "parser.y" /* yacc.c:1646  */
+#line 237 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t();}
-#line 1701 "y.tab.c" /* yacc.c:1646  */
+#line 1708 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 231 "parser.y" /* yacc.c:1646  */
-    {(yyval.content) = new content_t(); (yyval.content)->nextlist = (yyvsp[0].content)->nextlist;}
-#line 1707 "y.tab.c" /* yacc.c:1646  */
+#line 238 "parser.y" /* yacc.c:1646  */
+    {
+																	(yyval.content) = new content_t();
+																	(yyval.content) = (yyvsp[0].content);
+																	backpatch((yyval.content)->nextlist, nextinstr);}
+#line 1717 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 232 "parser.y" /* yacc.c:1646  */
+#line 242 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t();}
-#line 1713 "y.tab.c" /* yacc.c:1646  */
+#line 1723 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 233 "parser.y" /* yacc.c:1646  */
+#line 243 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t();}
-#line 1719 "y.tab.c" /* yacc.c:1646  */
+#line 1729 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 234 "parser.y" /* yacc.c:1646  */
+#line 244 "parser.y" /* yacc.c:1646  */
     {
 																	if(is_func)
 																	{
@@ -1728,23 +1738,40 @@ yyreduce:
 																	}
 																  else yyerror("return statement not inside function definition");
 																}
-#line 1732 "y.tab.c" /* yacc.c:1646  */
+#line 1742 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 243 "parser.y" /* yacc.c:1646  */
-    {if(!is_loop) {yyerror("Illegal use of continue");}}
-#line 1738 "y.tab.c" /* yacc.c:1646  */
+#line 253 "parser.y" /* yacc.c:1646  */
+    {
+																	if(!is_loop) {yyerror("Illegal use of continue");}
+																	(yyval.content) = new content_t();
+																	(yyval.content)->continuelist = {nextinstr};
+																	std::string instruction;
+																	instruction = to_string(nextinstr)  + ": " + "goto _";
+																	ICG.push_back(instruction);
+																	nextinstr++;
+
+																}
+#line 1757 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 244 "parser.y" /* yacc.c:1646  */
-    {if(!is_loop) {yyerror("Illegal use of break");}}
-#line 1744 "y.tab.c" /* yacc.c:1646  */
+#line 263 "parser.y" /* yacc.c:1646  */
+    {
+																		if(!is_loop) {yyerror("Illegal use of break");}
+																		(yyval.content) = new content_t();
+																		(yyval.content)->breaklist = {nextinstr};
+																		std::string instruction;
+																		instruction = to_string(nextinstr)  + ": " + "goto _";
+																		ICG.push_back(instruction);
+																		nextinstr++;
+																}
+#line 1771 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 246 "parser.y" /* yacc.c:1646  */
+#line 273 "parser.y" /* yacc.c:1646  */
     {
 																	if(is_func)
 																	{
@@ -1753,47 +1780,49 @@ yyreduce:
 																	}
 																	else yyerror("return statement not in function definition");
 															 }
-#line 1757 "y.tab.c" /* yacc.c:1646  */
+#line 1784 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 256 "parser.y" /* yacc.c:1646  */
+#line 283 "parser.y" /* yacc.c:1646  */
     {is_loop = 1;}
-#line 1763 "y.tab.c" /* yacc.c:1646  */
+#line 1790 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 256 "parser.y" /* yacc.c:1646  */
+#line 283 "parser.y" /* yacc.c:1646  */
     {is_loop = 0;}
-#line 1769 "y.tab.c" /* yacc.c:1646  */
+#line 1796 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 257 "parser.y" /* yacc.c:1646  */
+#line 284 "parser.y" /* yacc.c:1646  */
     {is_loop = 1;}
-#line 1775 "y.tab.c" /* yacc.c:1646  */
+#line 1802 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 257 "parser.y" /* yacc.c:1646  */
+#line 284 "parser.y" /* yacc.c:1646  */
     {is_loop = 0;}
-#line 1781 "y.tab.c" /* yacc.c:1646  */
+#line 1808 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 260 "parser.y" /* yacc.c:1646  */
+#line 287 "parser.y" /* yacc.c:1646  */
     {
 																																		backpatch((yyvsp[-3].content)->truelist,(yyvsp[-1].instr));
 
 																																		(yyval.content) = new content_t();
 																																		(yyval.content)->nextlist = merge((yyvsp[-3].content)->falselist,(yyvsp[0].content)->nextlist);
-																																	//	printlist($$->nextlist);
+																																		(yyval.content)->breaklist = (yyvsp[0].content)->breaklist;
+																																		(yyval.content)->continuelist = (yyvsp[0].content)->continuelist;
+																																		//printlist($$->breaklist);
 																																	}
-#line 1793 "y.tab.c" /* yacc.c:1646  */
+#line 1822 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 268 "parser.y" /* yacc.c:1646  */
+#line 297 "parser.y" /* yacc.c:1646  */
     {
 																																		backpatch((yyvsp[-7].content)->truelist,(yyvsp[-5].instr));
 																																		backpatch((yyvsp[-7].content)->falselist,(yyvsp[-1].instr));
@@ -1803,127 +1832,131 @@ yyreduce:
 																																		vector<int> temp = merge((yyvsp[-4].content)->nextlist,(yyvsp[-2].content)->nextlist);
 																																	//	printlist($8->nextlist);
 																																		(yyval.content)->nextlist = merge(temp,(yyvsp[0].content)->nextlist);
+																																		(yyval.content)->breaklist = merge((yyvsp[0].content)->breaklist,(yyvsp[-4].content)->breaklist);
+																																		(yyval.content)->continuelist = merge((yyvsp[0].content)->continuelist,(yyvsp[-4].content)->continuelist);
 																																	//	printlist($$->nextlist);
 																																	}
-#line 1809 "y.tab.c" /* yacc.c:1646  */
+#line 1840 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 281 "parser.y" /* yacc.c:1646  */
+#line 312 "parser.y" /* yacc.c:1646  */
     {is_loop = 1;}
-#line 1815 "y.tab.c" /* yacc.c:1646  */
+#line 1846 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 281 "parser.y" /* yacc.c:1646  */
+#line 312 "parser.y" /* yacc.c:1646  */
     {is_loop = 0;}
-#line 1821 "y.tab.c" /* yacc.c:1646  */
+#line 1852 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 281 "parser.y" /* yacc.c:1646  */
+#line 312 "parser.y" /* yacc.c:1646  */
     {
 																																									backpatch((yyvsp[-1].content)->nextlist,(yyvsp[-7].instr));
 																																									backpatch((yyvsp[-5].content)->truelist,(yyvsp[-3].instr));
+																																									backpatch((yyvsp[-1].content)->continuelist, (yyvsp[-7].instr));
 
 																																									(yyval.content) = new content_t();
-																																									(yyval.content)->nextlist = (yyvsp[-5].content)->falselist;
+																																									(yyval.content)->nextlist = merge((yyvsp[-5].content)->falselist,(yyvsp[-1].content)->breaklist);
+																																								//		printlist($8->breaklist);
 
 																																									std::string instruction;
-																																									instruction = to_string(nextinstr) + string(": ") + string("goto") + to_string((yyvsp[-7].instr));
+																																									instruction = to_string(nextinstr) + string(": ") + string("goto ") + to_string((yyvsp[-7].instr));
 																																									ICG.push_back(instruction);
 																																									nextinstr++;
 																																								}
-#line 1838 "y.tab.c" /* yacc.c:1646  */
+#line 1871 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 295 "parser.y" /* yacc.c:1646  */
+#line 328 "parser.y" /* yacc.c:1646  */
     {is_declaration = 0; rhs = 0;}
-#line 1844 "y.tab.c" /* yacc.c:1646  */
+#line 1877 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 314 "parser.y" /* yacc.c:1646  */
+#line 347 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->truelist = (yyvsp[0].content)->truelist; (yyval.content)->falselist = (yyvsp[0].content)->falselist;}
-#line 1850 "y.tab.c" /* yacc.c:1646  */
+#line 1883 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 315 "parser.y" /* yacc.c:1646  */
+#line 348 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->truelist = (yyvsp[0].content)->truelist; (yyval.content)->falselist = (yyvsp[0].content)->falselist;}
-#line 1856 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 68:
-#line 320 "parser.y" /* yacc.c:1646  */
-    {
-																													type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,2);
-
-																													(yyval.content) = new content_t();
-																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(">"));
-																												}
-#line 1867 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 69:
-#line 327 "parser.y" /* yacc.c:1646  */
-    {
-																													type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,2);
-
-																													(yyval.content) = new content_t();
-																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string("<"));
-																												}
-#line 1878 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 70:
-#line 334 "parser.y" /* yacc.c:1646  */
-    {
-																													type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,2);
-
-																													(yyval.content) = new content_t();
-																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string("=="));
-																												}
 #line 1889 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 71:
-#line 341 "parser.y" /* yacc.c:1646  */
+  case 68:
+#line 353 "parser.y" /* yacc.c:1646  */
     {
 																													type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,2);
 
 																													(yyval.content) = new content_t();
-																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string("!="));
+																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" > "));
 																												}
 #line 1900 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 72:
-#line 348 "parser.y" /* yacc.c:1646  */
+  case 69:
+#line 360 "parser.y" /* yacc.c:1646  */
     {
 																													type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,2);
 
 																													(yyval.content) = new content_t();
-																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(">="));
+																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" < "));
 																												}
 #line 1911 "y.tab.c" /* yacc.c:1646  */
     break;
 
+  case 70:
+#line 367 "parser.y" /* yacc.c:1646  */
+    {
+																													type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,2);
+
+																													(yyval.content) = new content_t();
+																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" == "));
+																												}
+#line 1922 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 71:
+#line 374 "parser.y" /* yacc.c:1646  */
+    {
+																													type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,2);
+
+																													(yyval.content) = new content_t();
+																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" != "));
+																												}
+#line 1933 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 72:
+#line 381 "parser.y" /* yacc.c:1646  */
+    {
+																													type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,2);
+
+																													(yyval.content) = new content_t();
+																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" >= "));
+																												}
+#line 1944 "y.tab.c" /* yacc.c:1646  */
+    break;
+
   case 73:
-#line 355 "parser.y" /* yacc.c:1646  */
+#line 388 "parser.y" /* yacc.c:1646  */
     {
 
 																													type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,2);
 
 																													(yyval.content) = new content_t();
-																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string("<="));
+																													gencode_rel((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" <= "));
 																												}
-#line 1923 "y.tab.c" /* yacc.c:1646  */
+#line 1956 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 363 "parser.y" /* yacc.c:1646  */
+#line 396 "parser.y" /* yacc.c:1646  */
     {
 																													type_check((yyvsp[-3].content)->data_type,(yyvsp[0].content)->data_type,2);
 
@@ -1934,11 +1967,11 @@ yyreduce:
 																													(yyval.content)->truelist = (yyvsp[0].content)->truelist;
 																													(yyval.content)->falselist = merge((yyvsp[-3].content)->falselist,(yyvsp[0].content)->falselist);
 																												}
-#line 1938 "y.tab.c" /* yacc.c:1646  */
+#line 1971 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 374 "parser.y" /* yacc.c:1646  */
+#line 407 "parser.y" /* yacc.c:1646  */
     {
 																													type_check((yyvsp[-3].content)->data_type,(yyvsp[0].content)->data_type,2);
 
@@ -1949,11 +1982,11 @@ yyreduce:
 																													(yyval.content)->truelist = merge((yyvsp[-3].content)->truelist,(yyvsp[0].content)->truelist);
 																													(yyval.content)->falselist = (yyvsp[0].content)->falselist;
 																												}
-#line 1953 "y.tab.c" /* yacc.c:1646  */
+#line 1986 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 385 "parser.y" /* yacc.c:1646  */
+#line 418 "parser.y" /* yacc.c:1646  */
     {
 																													(yyval.content) = new content_t();
 																													(yyval.content)->data_type = (yyvsp[0].content)->data_type;
@@ -1961,29 +1994,29 @@ yyreduce:
 																													(yyval.content)->truelist = (yyvsp[0].content)->falselist;
 																													(yyval.content)->falselist = (yyvsp[0].content)->truelist;
 																												}
-#line 1965 "y.tab.c" /* yacc.c:1646  */
+#line 1998 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 393 "parser.y" /* yacc.c:1646  */
+#line 426 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->data_type = (yyvsp[0].content)->data_type; (yyval.content)->addr = (yyvsp[0].content)->addr;}
-#line 1971 "y.tab.c" /* yacc.c:1646  */
+#line 2004 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 394 "parser.y" /* yacc.c:1646  */
+#line 427 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->data_type = (yyvsp[0].content)->data_type;}
-#line 1977 "y.tab.c" /* yacc.c:1646  */
+#line 2010 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 395 "parser.y" /* yacc.c:1646  */
+#line 428 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->data_type = (yyvsp[0].content)->data_type;}
-#line 1983 "y.tab.c" /* yacc.c:1646  */
+#line 2016 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 399 "parser.y" /* yacc.c:1646  */
+#line 432 "parser.y" /* yacc.c:1646  */
     {
 																											 type_check((yyvsp[-2].content)->entry->data_type,(yyvsp[0].content)->data_type,1);
 
@@ -1999,11 +2032,11 @@ yyreduce:
 																											 nextinstr++;
 
 																											}
-#line 2003 "y.tab.c" /* yacc.c:1646  */
+#line 2036 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 415 "parser.y" /* yacc.c:1646  */
+#line 448 "parser.y" /* yacc.c:1646  */
     {
 																											 type_check((yyvsp[-2].content)->entry->data_type,(yyvsp[0].content)->data_type,1);
 
@@ -2017,17 +2050,17 @@ yyreduce:
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
 																											}
-#line 2021 "y.tab.c" /* yacc.c:1646  */
+#line 2054 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 429 "parser.y" /* yacc.c:1646  */
+#line 462 "parser.y" /* yacc.c:1646  */
     {type_check((yyvsp[-2].content)->entry->data_type,(yyvsp[0].data_type),1); (yyval.content) = new content_t(); (yyval.content)->data_type = (yyvsp[0].data_type);}
-#line 2027 "y.tab.c" /* yacc.c:1646  */
+#line 2060 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 431 "parser.y" /* yacc.c:1646  */
+#line 464 "parser.y" /* yacc.c:1646  */
     {
 																											 type_check((yyvsp[-2].content)->entry->data_type,(yyvsp[0].content)->data_type,1);
 
@@ -2041,11 +2074,11 @@ yyreduce:
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
 																										 	}
-#line 2045 "y.tab.c" /* yacc.c:1646  */
+#line 2078 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 445 "parser.y" /* yacc.c:1646  */
+#line 478 "parser.y" /* yacc.c:1646  */
     {
 																											 type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,1);
 
@@ -2059,47 +2092,47 @@ yyreduce:
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
 																										 	}
-#line 2063 "y.tab.c" /* yacc.c:1646  */
+#line 2096 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 460 "parser.y" /* yacc.c:1646  */
+#line 493 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->data_type = (yyvsp[-1].entry)->data_type; (yyval.content)->code = string((yyvsp[-1].entry)->lexeme) + string("++");}
-#line 2069 "y.tab.c" /* yacc.c:1646  */
+#line 2102 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 461 "parser.y" /* yacc.c:1646  */
+#line 494 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->data_type = (yyvsp[-1].entry)->data_type; (yyval.content)->code = string((yyvsp[-1].entry)->lexeme) + string("--");}
-#line 2075 "y.tab.c" /* yacc.c:1646  */
+#line 2108 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 462 "parser.y" /* yacc.c:1646  */
+#line 495 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->data_type = (yyvsp[0].entry)->data_type; (yyval.content)->code = string("--") + string((yyvsp[0].entry)->lexeme);}
-#line 2081 "y.tab.c" /* yacc.c:1646  */
+#line 2114 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 463 "parser.y" /* yacc.c:1646  */
+#line 496 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->data_type = (yyvsp[0].entry)->data_type; (yyval.content)->code = string("++") + string((yyvsp[0].entry)->lexeme);}
-#line 2087 "y.tab.c" /* yacc.c:1646  */
+#line 2120 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 465 "parser.y" /* yacc.c:1646  */
+#line 498 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->entry = (yyvsp[0].entry);}
-#line 2093 "y.tab.c" /* yacc.c:1646  */
+#line 2126 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 466 "parser.y" /* yacc.c:1646  */
+#line 499 "parser.y" /* yacc.c:1646  */
     {(yyval.content) = new content_t(); (yyval.content)->code = (yyvsp[0].content)->code;}
-#line 2099 "y.tab.c" /* yacc.c:1646  */
+#line 2132 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 469 "parser.y" /* yacc.c:1646  */
+#line 502 "parser.y" /* yacc.c:1646  */
     {
                                                           if(is_declaration && !rhs)
                                                           {
@@ -2133,107 +2166,107 @@ yyreduce:
 																													}
 																													$$ = $1; */
                                                          }
-#line 2137 "y.tab.c" /* yacc.c:1646  */
+#line 2170 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 504 "parser.y" /* yacc.c:1646  */
-    {rhs=1; (yyval.op) = new string("=");}
-#line 2143 "y.tab.c" /* yacc.c:1646  */
+#line 537 "parser.y" /* yacc.c:1646  */
+    {rhs=1; (yyval.op) = new string(" = ");}
+#line 2176 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 505 "parser.y" /* yacc.c:1646  */
-    {rhs=1; (yyval.op) = new string("+=");}
-#line 2149 "y.tab.c" /* yacc.c:1646  */
+#line 538 "parser.y" /* yacc.c:1646  */
+    {rhs=1; (yyval.op) = new string(" += ");}
+#line 2182 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 506 "parser.y" /* yacc.c:1646  */
-    {rhs=1; (yyval.op) = new string("-=");}
-#line 2155 "y.tab.c" /* yacc.c:1646  */
+#line 539 "parser.y" /* yacc.c:1646  */
+    {rhs=1; (yyval.op) = new string(" -= ");}
+#line 2188 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 507 "parser.y" /* yacc.c:1646  */
-    {rhs=1; (yyval.op) = new string("*=");}
-#line 2161 "y.tab.c" /* yacc.c:1646  */
+#line 540 "parser.y" /* yacc.c:1646  */
+    {rhs=1; (yyval.op) = new string(" *= ");}
+#line 2194 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 508 "parser.y" /* yacc.c:1646  */
-    {rhs=1;	(yyval.op) = new string("/=");}
-#line 2167 "y.tab.c" /* yacc.c:1646  */
+#line 541 "parser.y" /* yacc.c:1646  */
+    {rhs=1;	(yyval.op) = new string(" /= ");}
+#line 2200 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 509 "parser.y" /* yacc.c:1646  */
-    {rhs=1; (yyval.op) = new string("%=");}
-#line 2173 "y.tab.c" /* yacc.c:1646  */
+#line 542 "parser.y" /* yacc.c:1646  */
+    {rhs=1; (yyval.op) = new string(" %= ");}
+#line 2206 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 512 "parser.y" /* yacc.c:1646  */
+#line 545 "parser.y" /* yacc.c:1646  */
     {
 																																			type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,0);
 																																			(yyval.content) = new content_t();
 
 																																			(yyval.content)->data_type = (yyvsp[-2].content)->data_type;
-																																			gencode_math((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string("+"));
+																																			gencode_math((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" + "));
 																																		 }
-#line 2185 "y.tab.c" /* yacc.c:1646  */
+#line 2218 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 520 "parser.y" /* yacc.c:1646  */
+#line 553 "parser.y" /* yacc.c:1646  */
     {
 																																			 type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,0);
 																																			 (yyval.content) = new content_t();
 
 																																			 (yyval.content)->data_type = (yyvsp[-2].content)->data_type;
-																																			 gencode_math((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string("-"));
+																																			 gencode_math((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" - "));
 								 																										 }
-#line 2197 "y.tab.c" /* yacc.c:1646  */
+#line 2230 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 100:
-#line 528 "parser.y" /* yacc.c:1646  */
+#line 561 "parser.y" /* yacc.c:1646  */
     {
 																																			 type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,0);
 																																			 (yyval.content) = new content_t();
 
 																																			 (yyval.content)->data_type = (yyvsp[-2].content)->data_type;
-																																			 gencode_math((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string("*"));
+																																			 gencode_math((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" * "));
 								 																										 }
-#line 2209 "y.tab.c" /* yacc.c:1646  */
+#line 2242 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 537 "parser.y" /* yacc.c:1646  */
+#line 570 "parser.y" /* yacc.c:1646  */
     {
 																																			type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,0);
 																																			(yyval.content) = new content_t();
 
 																																			(yyval.content)->data_type = (yyvsp[-2].content)->data_type;
-																																			gencode_math((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string("/"));
+																																			gencode_math((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" / "));
 																																		 }
-#line 2221 "y.tab.c" /* yacc.c:1646  */
+#line 2254 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 545 "parser.y" /* yacc.c:1646  */
+#line 578 "parser.y" /* yacc.c:1646  */
     {
 																																				type_check((yyvsp[-2].content)->data_type,(yyvsp[0].content)->data_type,0);
 																																				(yyval.content) = new content_t();
 
 																																				(yyval.content)->data_type = (yyvsp[-2].content)->data_type;
-																																				gencode_math((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string("%"));
+																																				gencode_math((yyval.content), (yyvsp[-2].content), (yyvsp[0].content), string(" % "));
 																																		 }
-#line 2233 "y.tab.c" /* yacc.c:1646  */
+#line 2266 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 553 "parser.y" /* yacc.c:1646  */
+#line 586 "parser.y" /* yacc.c:1646  */
     {
 								 																											(yyval.content) = new content_t();
 								 																											(yyval.content)->data_type = (yyvsp[-1].content)->data_type;
@@ -2241,72 +2274,72 @@ yyreduce:
 																																			(yyval.content)->addr = (yyvsp[-1].content)->addr;
 																																			(yyval.content)->code = (yyvsp[-1].content)->code;
 																																		 }
-#line 2245 "y.tab.c" /* yacc.c:1646  */
+#line 2278 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 561 "parser.y" /* yacc.c:1646  */
+#line 594 "parser.y" /* yacc.c:1646  */
     {
 								 																											(yyval.content) = new content_t();
 								 																											(yyval.content)->data_type = (yyvsp[0].content)->data_type;
 
 																																			(yyval.content)->addr = "t" + to_string(temp_var_number);
-																																			std::string expr = (yyval.content)->addr + "=" + "-" + (yyvsp[0].content)->addr;
+																																			std::string expr = (yyval.content)->addr + " = " + "minus " + (yyvsp[0].content)->addr;
 																																			(yyval.content)->code = (yyvsp[0].content)->code + expr;
 
 																																			temp_var_number++;
 																																		 }
-#line 2260 "y.tab.c" /* yacc.c:1646  */
+#line 2293 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 572 "parser.y" /* yacc.c:1646  */
+#line 605 "parser.y" /* yacc.c:1646  */
     {
 								 																											(yyval.content) = new content_t();
 								 																										  (yyval.content)->data_type = (yyvsp[0].entry)->data_type;
 
 																																		 	(yyval.content)->addr = (yyvsp[0].entry)->lexeme;
 																																	   }
-#line 2271 "y.tab.c" /* yacc.c:1646  */
+#line 2304 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 579 "parser.y" /* yacc.c:1646  */
+#line 612 "parser.y" /* yacc.c:1646  */
     {
 								 																											(yyval.content) = new content_t();
 								 																											(yyval.content)->data_type = (yyvsp[0].entry)->data_type;
 
 																																			(yyval.content)->addr = to_string((yyvsp[0].entry)->value);
 																																		 }
-#line 2282 "y.tab.c" /* yacc.c:1646  */
+#line 2315 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 587 "parser.y" /* yacc.c:1646  */
+#line 620 "parser.y" /* yacc.c:1646  */
     {(yyvsp[0].entry)->is_constant=1; (yyval.entry) = (yyvsp[0].entry);}
-#line 2288 "y.tab.c" /* yacc.c:1646  */
+#line 2321 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 588 "parser.y" /* yacc.c:1646  */
+#line 621 "parser.y" /* yacc.c:1646  */
     {(yyvsp[0].entry)->is_constant=1; (yyval.entry) = (yyvsp[0].entry);}
-#line 2294 "y.tab.c" /* yacc.c:1646  */
+#line 2327 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 589 "parser.y" /* yacc.c:1646  */
+#line 622 "parser.y" /* yacc.c:1646  */
     {(yyvsp[0].entry)->is_constant=1; (yyval.entry) = (yyvsp[0].entry);}
-#line 2300 "y.tab.c" /* yacc.c:1646  */
+#line 2333 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 590 "parser.y" /* yacc.c:1646  */
+#line 623 "parser.y" /* yacc.c:1646  */
     {(yyvsp[0].entry)->is_constant=1; (yyval.entry) = (yyvsp[0].entry);}
-#line 2306 "y.tab.c" /* yacc.c:1646  */
+#line 2339 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 593 "parser.y" /* yacc.c:1646  */
+#line 626 "parser.y" /* yacc.c:1646  */
     {
 																															if(is_declaration)
 																															{
@@ -2336,61 +2369,61 @@ yyreduce:
 
 																															(yyval.content)->entry = (yyvsp[-3].entry);
 																														}
-#line 2340 "y.tab.c" /* yacc.c:1646  */
+#line 2373 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 623 "parser.y" /* yacc.c:1646  */
+#line 656 "parser.y" /* yacc.c:1646  */
     {(yyval.entry) = (yyvsp[0].entry);}
-#line 2346 "y.tab.c" /* yacc.c:1646  */
+#line 2379 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 624 "parser.y" /* yacc.c:1646  */
+#line 657 "parser.y" /* yacc.c:1646  */
     {(yyval.entry) = (yyvsp[0].entry);}
-#line 2352 "y.tab.c" /* yacc.c:1646  */
+#line 2385 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 627 "parser.y" /* yacc.c:1646  */
+#line 660 "parser.y" /* yacc.c:1646  */
     {
 																													(yyval.data_type) = (yyvsp[-3].entry)->data_type;
 																													check_parameter_list((yyvsp[-3].entry),param_list,p_idx);
 																													p_idx = 0;
 																												}
-#line 2362 "y.tab.c" /* yacc.c:1646  */
+#line 2395 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 633 "parser.y" /* yacc.c:1646  */
+#line 666 "parser.y" /* yacc.c:1646  */
     {
 							 																						 (yyval.data_type) = (yyvsp[-2].entry)->data_type;
 																													 check_parameter_list((yyvsp[-2].entry),param_list,p_idx);
 																													 p_idx = 0;
 																												}
-#line 2372 "y.tab.c" /* yacc.c:1646  */
+#line 2405 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 645 "parser.y" /* yacc.c:1646  */
+#line 678 "parser.y" /* yacc.c:1646  */
     {param_list[p_idx++] = (yyvsp[0].content)->data_type;}
-#line 2378 "y.tab.c" /* yacc.c:1646  */
+#line 2411 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 646 "parser.y" /* yacc.c:1646  */
+#line 679 "parser.y" /* yacc.c:1646  */
     {param_list[p_idx++] = STRING;}
-#line 2384 "y.tab.c" /* yacc.c:1646  */
+#line 2417 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 649 "parser.y" /* yacc.c:1646  */
+#line 682 "parser.y" /* yacc.c:1646  */
     {(yyval.instr) = nextinstr;}
-#line 2390 "y.tab.c" /* yacc.c:1646  */
+#line 2423 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 652 "parser.y" /* yacc.c:1646  */
+#line 685 "parser.y" /* yacc.c:1646  */
     {
 					(yyval.content) = new content_t;
 					(yyval.content)->nextlist = {nextinstr};
@@ -2400,11 +2433,11 @@ yyreduce:
 					ICG.push_back(instruction);
 					nextinstr++;
 				}
-#line 2404 "y.tab.c" /* yacc.c:1646  */
+#line 2437 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2408 "y.tab.c" /* yacc.c:1646  */
+#line 2441 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2632,7 +2665,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 663 "parser.y" /* yacc.c:1906  */
+#line 696 "parser.y" /* yacc.c:1906  */
 
 
 void gencode_rel(content_t* & lhs, content_t* arg1, content_t* arg2, const string& op)
@@ -2644,7 +2677,7 @@ void gencode_rel(content_t* & lhs, content_t* arg1, content_t* arg2, const strin
 
 	std::string instruction;
 
-	instruction = to_string(nextinstr) + string(": ") + string("if") + arg1->addr + op + arg2->addr + string("goto _");
+	instruction = to_string(nextinstr) + string(": ") + string("if ") + arg1->addr + op + arg2->addr + string(" goto _");
 	ICG.push_back(instruction);
 	nextinstr++;
 
@@ -2656,7 +2689,7 @@ void gencode_rel(content_t* & lhs, content_t* arg1, content_t* arg2, const strin
 void gencode_math(content_t* & lhs, content_t* arg1, content_t* arg2, const string& op)
 {
 	lhs->addr = "t" + to_string(temp_var_number);
-	std::string expr = lhs->addr + string("=") + arg1->addr + op + arg2->addr;
+	std::string expr = lhs->addr + string(" = ") + arg1->addr + op + arg2->addr;
 	lhs->code = arg1->code + arg2->code + expr;
 
 	temp_var_number++;
@@ -2716,7 +2749,7 @@ void displayICG()
 
 	for(int i=0; i<ICG.size();i++)
 	outfile << ICG[i] <<endl;
-	outfile<<nextinstr<<": exit"<<endl;
+	outfile<<nextinstr<<": exit";
 	outfile.close();
 }
 
