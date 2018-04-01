@@ -262,12 +262,12 @@ if_block:IF '(' expression ')' M stmt 	%prec LOWER_THAN_ELSE 		{
 																																		$$->nextlist = merge($3->falselist,$6->nextlist);
 																																	}
 
-				|IF '(' expression ')' M stmt N ELSE M stmt								{
+				|IF '(' expression ')' M stmt ELSE N M stmt								{
 																																		backpatch($3->truelist,$5);
 																																		backpatch($3->falselist,$9);
 
 																																		$$ = new content_t();
-																																		vector<int> temp = merge($6->nextlist,*$7);
+																																		vector<int> temp = merge($6->nextlist,*$8);
 																																		$$->nextlist = merge(temp,$10->nextlist);
 																																	}
     ;
@@ -727,8 +727,11 @@ void displayICG()
 {
 	ofstream outfile("ICG.code");
 
-	for(int i=0; i<ICG.size();i++)
-	outfile << ICG[i] <<endl;
+	for(int i=0; i<ICG.size();i++){
+		outfile << ICG[i] <<endl;
+		cout<<ICG[i] <<endl;
+	}
+
 
 	outfile.close();
 }
@@ -754,13 +757,13 @@ int main(int argc, char *argv[])
 	{
 			printf("\nPARSING FAILED!\n\n\n");
 	}
-
+/*
 	printf("SYMBOL TABLES\n\n");
 	display_all();
 
 	printf("CONSTANT TABLE");
 	display_constant_table(constant_table);
-
+*/
 	displayICG();
 
 

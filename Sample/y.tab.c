@@ -637,7 +637,7 @@ static const yytype_int16 yypact[] =
     -148,  -148,  -148,  -148,  -148,   281,    91,   256,   130,   107,
     -148,  -148,  -148,   280,  -148,   -27,   334,  -148,   130,    87,
      256,  -148,   256,  -148,   231,  -148,   -26,   334,   196,  -148,
-      15,  -148,  -148,   196,  -148,  -148,    61,  -148,   196,   196,
+      15,  -148,    61,   196,  -148,  -148,  -148,  -148,   196,   196,
     -148,  -148,  -148,   196,  -148,  -148
 };
 
@@ -664,7 +664,7 @@ static const yytype_uint8 yydefact[] =
       33,    39,    38,    40,    41,    89,     0,     0,     0,     0,
       44,    45,    43,     0,    42,     0,    67,    65,     0,     0,
        0,    46,     0,   120,     0,    64,     0,    66,     0,    47,
-       0,   120,    51,     0,    49,    53,     0,    48,     0,     0,
+       0,   120,    51,     0,    49,    53,   121,    48,     0,     0,
      120,    50,    54,     0,    55,    52
 };
 
@@ -685,7 +685,7 @@ static const yytype_int16 yydefgoto[] =
       19,    88,    89,    90,   148,   149,   137,   138,   150,   151,
      183,   188,   152,   153,   189,   194,   154,    21,    22,   168,
      169,   166,    96,    97,    25,    98,    50,    99,    70,   100,
-      75,   156,   101,   102,   124,   186
+      75,   156,   101,   102,   124,   190
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -704,7 +704,7 @@ static const yytype_int16 yytable[] =
       87,    77,    77,    77,    77,    77,   193,   108,    86,     2,
        3,   126,   127,   128,   129,   130,   131,    95,    41,   109,
        1,   135,   136,   133,   157,     1,    61,    62,    63,    64,
-     139,   190,    65,   158,    87,    55,    93,     2,     3,   160,
+     139,   186,    65,   158,    87,    55,    93,     2,     3,   160,
       66,    52,    53,   163,   162,   172,     1,    61,    62,    63,
       64,    92,    35,     1,    61,    62,    63,    64,   161,   -62,
      155,    20,   175,     2,     3,    65,   164,    26,    24,   177,
@@ -813,8 +813,8 @@ static const yytype_uint8 yystos[] =
       76,    77,    80,    81,    84,    93,    99,    51,    51,   102,
       55,    55,    55,    89,    55,    88,    89,    55,    87,    88,
       51,    55,    38,    52,    87,    55,    88,    89,   102,    52,
-      88,    52,    72,    78,    52,   102,   103,    72,    79,    82,
-      50,    72,    72,   102,    83,    72
+      88,    52,    72,    78,    52,   102,    50,    72,    79,    82,
+     103,    72,    72,   102,    83,    72
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
@@ -1796,7 +1796,7 @@ yyreduce:
 																																		backpatch((yyvsp[-7].content)->falselist,(yyvsp[-1].instr));
 
 																																		(yyval.content) = new content_t();
-																																		vector<int> temp = merge((yyvsp[-4].content)->nextlist,*(yyvsp[-3].nextlist));
+																																		vector<int> temp = merge((yyvsp[-4].content)->nextlist,*(yyvsp[-2].nextlist));
 																																		(yyval.content)->nextlist = merge(temp,(yyvsp[0].content)->nextlist);
 																																	}
 #line 1803 "y.tab.c" /* yacc.c:1646  */
@@ -2700,8 +2700,11 @@ void displayICG()
 {
 	ofstream outfile("ICG.code");
 
-	for(int i=0; i<ICG.size();i++)
-	outfile << ICG[i] <<endl;
+	for(int i=0; i<ICG.size();i++){
+		outfile << ICG[i] <<endl;
+		cout<<ICG[i] <<endl;
+	}
+
 
 	outfile.close();
 }
@@ -2727,13 +2730,13 @@ int main(int argc, char *argv[])
 	{
 			printf("\nPARSING FAILED!\n\n\n");
 	}
-
+/*
 	printf("SYMBOL TABLES\n\n");
 	display_all();
 
 	printf("CONSTANT TABLE");
 	display_constant_table(constant_table);
-
+*/
 	displayICG();
 
 

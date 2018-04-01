@@ -464,6 +464,7 @@ content_t* do_whats_necessary(content_t *a, char b, content_t *c)
 				ret->code = code;
 				return ret;
 }
+
 void type_check(int left, int right, int flag)
 {
 	if(left != right)
