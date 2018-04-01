@@ -14,7 +14,7 @@ This code is built upon the parser designed in Project-2 with some modifications
  4. To run the parser `$./semantic_analyser test-file.c`
 
 
-## FEATURES
+### FEATURES
  - Type checking in arithmetic expressions
  - Type checking in relational and logical expressions
  - Type checking in assignment expressions

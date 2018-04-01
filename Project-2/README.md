@@ -1,5 +1,4 @@
 # Compiler Design Project-2
-==========================
 
 ## Parser for a subset of the C language
 
