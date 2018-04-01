@@ -1,4 +1,4 @@
 #!/bin/bash
 lex lexl.l
 yacc -d parser.y -v
-gcc -w -g y.tab.c -ly -ll
+gcc -w -g y.tab.c -ly -ll -o parser
