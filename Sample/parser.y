@@ -78,7 +78,6 @@
 %type <content> lhs
 %type <content> sub_expr
 %type <content> expression
-%type <content> expression_stmt
 %type <content> unary_expr
 %type <content> arithmetic_expr
 %type <content> assignment_expr
@@ -141,7 +140,6 @@ function: type
 
 					compound_stmt										{
 																						is_func = 0;
-																						backpatch($8->nextlist,nextinstr);
 																					}
           ;
  /* Now we will define a grammar for how types can be specified */
@@ -222,9 +220,8 @@ statements:statements M stmt		{
 																	$$->nextlist = $3->nextlist;
 																}
 
-    | stmt											{
+    |														{
 																	$$ = new content_t();
-																	$$->nextlist = $1->nextlist;
 																}
     ;
 
@@ -232,7 +229,7 @@ statements:statements M stmt		{
 single_stmt :if_block						{$$ = new content_t(); $$->nextlist = $1->nextlist;backpatch($$->nextlist, nextinstr);}
     |for_block									{$$ = new content_t();}
     |while_block								{$$ = new content_t(); $$->nextlist = $1->nextlist;}
-	|declaration								  {$$ = new content_t(); /*printf("%d\n",nextinstr);/*$$->nextlist = $1->nextlist;*/}
+    |declaration								{$$ = new content_t();}
     |function_call ';'					{$$ = new content_t();}
 		|RETURN ';'								  {
 																	if(is_func)
@@ -256,13 +253,8 @@ single_stmt :if_block						{$$ = new content_t(); $$->nextlist = $1->nextlist;ba
 															 }
     ;
 
-/* for_block:FOR '(' expression_stmt  expression_stmt ')' {is_loop = 1;} stmt {is_loop = 0;}
-    		 |FOR '(' expression_stmt M expression_stmt M expression ')' {is_loop = 1;} M stmt {is_loop = 0;}
-				 																																																		  {
-																																																								backpatch($3->truelist,$4);
-																																																								backpatch($11->nextlist,$6);
-																																																								backpatch($7->nextlist,$4);
-				 																																																			} */
+for_block:FOR '(' expression_stmt  expression_stmt ')' {is_loop = 1;} stmt {is_loop = 0;}
+    		 |FOR '(' expression_stmt expression_stmt expression ')' {is_loop = 1;} stmt {is_loop = 0;}
     		 ;
 
 if_block:IF '(' expression ')' M stmt 	%prec LOWER_THAN_ELSE 		{
@@ -286,7 +278,6 @@ if_block:IF '(' expression ')' M stmt 	%prec LOWER_THAN_ELSE 		{
 																																	}
     ;
 
-if_block:  specific_if;
 while_block: WHILE M '(' expression	')' M {is_loop = 1;} stmt {is_loop = 0;}		{
 																																									backpatch($8->nextlist,$2);
 																																									backpatch($4->truelist,$6);
@@ -301,7 +292,7 @@ while_block: WHILE M '(' expression	')' M {is_loop = 1;} stmt {is_loop = 0;}		{
 																																								}
 		;
 
-declaration: type  declaration_list ';'					{is_declaration = 0;}
+declaration: type  declaration_list ';'					{is_declaration = 0; rhs = 0;}
 					 | declaration_list ';'
 					 | unary_expr ';'
 
@@ -316,8 +307,8 @@ sub_decl: assignment_expr
 				;
 
 /* This is because we can have empty expession statements inside for loops */
-expression_stmt: expression ';'											{$$ = new content_t(); $$->truelist = $3->truelist; $$->falselist = $3->falselist;}
-    					 | ';'																{$$ = new content_t();}
+expression_stmt: expression ';'
+    					 | ';'
     			 		 ;
 
 expression: expression ',' sub_expr									{$$ = new content_t(); $$->truelist = $3->truelist; $$->falselist = $3->falselist;}
@@ -419,8 +410,6 @@ assignment_expr :
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
 
-																											 rhs = 0;
-
 																											}
 
     |lhs assign array_access													{
@@ -435,11 +424,9 @@ assignment_expr :
 																											 instruction = to_string(nextinstr) + string(": ") + $$->code;
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
-
-																											 rhs = 0;
 																											}
 
-    |lhs assign function_call													{type_check($1->entry->data_type,$3,1); $$ = new content_t(); $$->data_type = $3; rhs = 0;}
+    |lhs assign function_call													{type_check($1->entry->data_type,$3,1); $$ = new content_t(); $$->data_type = $3;}
 
 		|lhs assign unary_expr                            {
 																											 type_check($1->entry->data_type,$3->data_type,1);
@@ -453,8 +440,6 @@ assignment_expr :
 																											 instruction = to_string(nextinstr) + string(": ") + $$->code;
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
-
-																											 rhs = 0;
 																										 	}
 
 		|unary_expr assign unary_expr											{
@@ -469,8 +454,6 @@ assignment_expr :
 																											 instruction = to_string(nextinstr) + string(": ") + $$->code;
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
-
-																											 rhs = 0;
 																										 	}
     ;
 
@@ -495,8 +478,8 @@ identifier:IDENTIFIER                                    {
                                                           {
                                                             $1 = search_recursive(yytext);
                                                             if($1 == NULL) yyerror("Variable not declared");
-                                                            /* if(rhs)
-                                                            rhs = 0; */
+                                                            if(rhs)
+                                                            rhs = 0;
                                                           }
 
 																													/* display_symbol_table(SYMBOL_TABLE); */
@@ -671,7 +654,7 @@ N:			{
 					$$->nextlist = {nextinstr};
 
 					std::string instruction;
-					instruction = to_string(nextinstr)  + string(": ") + string("goto _");
+					instruction = to_string(nextinstr)  + ": " + "goto _";
 					ICG.push_back(instruction);
 					nextinstr++;
 				}
