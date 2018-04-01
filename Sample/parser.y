@@ -30,7 +30,7 @@
 	void backpatch(vector<int>&, int);
 	void gencode_math(content_t* & lhs, content_t* arg1, content_t* arg2, const string& op);
 	void gencode_rel(content_t* & lhs, content_t* arg1, content_t* arg2, const string& op);
-
+	void printlist(vector<int>);
 
 	int nextinstr = 0;
 	int temp_var_number = 0;
@@ -93,7 +93,7 @@
 
 
 %type <instr> M
-%type <nextlist> N
+%type <content> N
 
 %left ','
 %right '='
@@ -207,6 +207,8 @@ compound_stmt :
 
 																	$$ = new content_t();
 																	$$->nextlist = $3->nextlist;
+																//	printlist($3->nextlist);
+																	//cout<<yytext<<endl;
 
 																}
     ;
@@ -224,7 +226,7 @@ statements:statements M stmt		{
     ;
 
  /* Grammar for what constitutes every individual statement */
-single_stmt :if_block						{$$ = new content_t(); $$->nextlist = $1->nextlist;}
+single_stmt :if_block						{$$ = new content_t(); $$->nextlist = $1->nextlist;backpatch($$->nextlist, nextinstr);}
     |for_block									{$$ = new content_t();}
     |while_block								{$$ = new content_t(); $$->nextlist = $1->nextlist;}
     |declaration								{$$ = new content_t();}
@@ -260,15 +262,19 @@ if_block:IF '(' expression ')' M stmt 	%prec LOWER_THAN_ELSE 		{
 
 																																		$$ = new content_t();
 																																		$$->nextlist = merge($3->falselist,$6->nextlist);
+																																	//	printlist($$->nextlist);
 																																	}
 
-				|IF '(' expression ')' M stmt ELSE N M stmt								{
+				|IF '(' expression ')' M stmt  ELSE N M stmt								{
 																																		backpatch($3->truelist,$5);
 																																		backpatch($3->falselist,$9);
 
 																																		$$ = new content_t();
-																																		vector<int> temp = merge($6->nextlist,*$8);
+
+																																		vector<int> temp = merge($6->nextlist,$8->nextlist);
+																																	//	printlist($8->nextlist);
 																																		$$->nextlist = merge(temp,$10->nextlist);
+																																	//	printlist($$->nextlist);
 																																	}
     ;
 
@@ -461,9 +467,11 @@ lhs: identifier																					{$$ = new content_t(); $$->entry = $1;}
 	 ;
 
 identifier:IDENTIFIER                                    {
-                                                          /* if(is_declaration && !rhs)
+                                                          if(is_declaration && !rhs)
                                                           {
                                                             $1 = insert(SYMBOL_TABLE,yytext,INT_MAX,current_dtype);
+																														/* display_symbol_table(SYMBOL_TABLE); */
+
                                                             if($1 == NULL) yyerror("Redeclaration of variable");
                                                           }
                                                           else
@@ -474,11 +482,14 @@ identifier:IDENTIFIER                                    {
                                                             rhs = 0;
                                                           }
 
-                                                          $$ = $1; */
+																													/* display_symbol_table(SYMBOL_TABLE); */
 
-																													if(is_declaration && !rhs)
+                                                          $$ = $1;
+
+																													/* if(is_declaration && !rhs)
 																													{
 																															$1 = insert(SYMBOL_TABLE,yytext,INT_MAX,current_dtype);
+																															printf("In ST! Symbol table :%p, entry: %p, text: %s\n",SYMBOL_TABLE, $1, yytext);
 																															if($1 == NULL) yyerror("Redeclaration of variable");
 																													}
 																													else
@@ -486,7 +497,7 @@ identifier:IDENTIFIER                                    {
 																															$1 = search_recursive(yytext);
 																															if($1 == NULL) yyerror("Variable not declared");
 																													}
-																													$$ = $1;
+																													$$ = $1; */
                                                          }
     			 ;
 
@@ -639,7 +650,8 @@ M: 	 		{$$ = nextinstr;}
  ;
 
 N:			{
-					$$ = new vector<int>(nextinstr);
+					$$ = new content_t;
+					$$->nextlist = {nextinstr};
 
 					std::string instruction;
 					instruction = to_string(nextinstr)  + ": " + "goto _";
@@ -683,6 +695,7 @@ void gencode_math(content_t* & lhs, content_t* arg1, content_t* arg2, const stri
 
 void backpatch(vector<int>& v1, int number)
 {
+//	cout<<"S"<<endl;
 	for(int i = 0; i<v1.size(); i++)
 	{
 		string instruction = ICG[v1[i]];
@@ -694,10 +707,11 @@ void backpatch(vector<int>& v1, int number)
 		}
 		else
 		{
-			printf("Error while backpatching!\n");
-			cout << instruction << endl;
+		//	printf("Error while backpatching!\n");
+			//cout << instruction << " "<<instruction.size()<<endl;
 		}
 	}
+	//cout<<"E"<<endl;
 }
 
 vector<int> merge(vector<int>& v1, vector<int>& v2)
@@ -727,13 +741,16 @@ void displayICG()
 {
 	ofstream outfile("ICG.code");
 
-	for(int i=0; i<ICG.size();i++){
-		outfile << ICG[i] <<endl;
-		cout<<ICG[i] <<endl;
-	}
-
-
+	for(int i=0; i<ICG.size();i++)
+	outfile << ICG[i] <<endl;
+	outfile<<nextinstr<<": exit"<<endl;
 	outfile.close();
+}
+
+void printlist(vector<int> v){
+	for(auto it:v)
+		cout<<it<<" ";
+	cout<<"Next: "<<nextinstr<<endl;
 }
 
 int main(int argc, char *argv[])
@@ -757,13 +774,15 @@ int main(int argc, char *argv[])
 	{
 			printf("\nPARSING FAILED!\n\n\n");
 	}
-/*
-	printf("SYMBOL TABLES\n\n");
+
+	/* printf("SYMBOL TABLES\n\n");
 	display_all();
 
 	printf("CONSTANT TABLE");
-	display_constant_table(constant_table);
-*/
+	display_constant_table(constant_table); */
+
+	/* display_all(); */
+
 	displayICG();
 
 

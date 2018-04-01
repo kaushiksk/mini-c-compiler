@@ -108,6 +108,7 @@ int myhash( char *lexeme )
 	/* Apply jenkin's myhash function
 	* https://en.wikipedia.org/wiki/Jenkins_hash_function#one-at-a-time
 	*/
+	
 	for ( hashvalue = i = 0; i < strlen(lexeme); ++i ) {
         hashvalue += lexeme[i];
         hashvalue += ( hashvalue << 10 );
@@ -116,8 +117,8 @@ int myhash( char *lexeme )
 	hashvalue += ( hashvalue << 3 );
 	hashvalue ^= ( hashvalue >> 11 );
     hashvalue += ( hashvalue << 15 );
-
-	return hashvalue % HASH_TABLE_SIZE; // return an index in [0, HASH_TABLE_SIZE)
+	//cout<<(hashvalue% HASH_TABLE_SIZE + HASH_TABLE_SIZE) % HASH_TABLE_SIZE<<endl;
+	return (hashvalue% HASH_TABLE_SIZE + HASH_TABLE_SIZE) % HASH_TABLE_SIZE; // return an index in [0, HASH_TABLE_SIZE)
 }
 
 /* Create an entry for a lexeme, token pair. This will be called from the insert function */
