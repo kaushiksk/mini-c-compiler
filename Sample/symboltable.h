@@ -30,7 +30,7 @@ int current_scope = 0;
 struct entry_t
 {
 	char* lexeme;
-	double value;
+	int value;
 	int data_type;
 	int* parameter_list; // for functions
 	int array_dimension;
@@ -65,6 +65,7 @@ struct content_t
 
 extern table_t symbol_table_list[NUM_TABLES];
 
+void display_symbol_table(entry_t** hash_table_ptr);
 /* Create a new hash_table. */
 entry_t** create_table()
 {
@@ -88,7 +89,7 @@ entry_t** create_table()
 int create_new_scope()
 {
 	table_index++;
-
+	// printf("Table index:%d\n",table_index);
 	symbol_table_list[table_index].symbol_table = create_table();
 	symbol_table_list[table_index].parent = current_scope;
 
@@ -102,22 +103,28 @@ int exit_scope()
 /* Generate myhash from a string. Then generate an index in [0, HASH_TABLE_SIZE) */
 int myhash( char *lexeme )
 {
-	size_t i;
-	int hashvalue;
+	// size_t i;
+	// int hashvalue;
+  //
+	// /* Apply jenkin's myhash function
+	// * https://en.wikipedia.org/wiki/Jenkins_hash_function#one-at-a-time
+	// */
+	// // for ( hashvalue = i = 0; i < strlen(lexeme); ++i ) {
+  // //       hashvalue += lexeme[i];
+  // //       hashvalue += ( hashvalue << 10 );
+  // //       hashvalue ^= ( hashvalue >> 6 );
+  // //   }
+	// // hashvalue += ( hashvalue << 3 );
+	// // hashvalue ^= ( hashvalue >> 11 );
+  // //   hashvalue += ( hashvalue << 15 );
+  //
+	// return hashvalue % HASH_TABLE_SIZE; // return an index in [0, HASH_TABLE_SIZE)
 
-	/* Apply jenkin's myhash function
-	* https://en.wikipedia.org/wiki/Jenkins_hash_function#one-at-a-time
-	*/
-	for ( hashvalue = i = 0; i < strlen(lexeme); ++i ) {
-        hashvalue += lexeme[i];
-        hashvalue += ( hashvalue << 10 );
-        hashvalue ^= ( hashvalue >> 6 );
-    }
-	hashvalue += ( hashvalue << 3 );
-	hashvalue ^= ( hashvalue >> 11 );
-    hashvalue += ( hashvalue << 15 );
+	int i,value;
+	for(value=i=0;lexeme[i]!=0;i++)
+	value+=lexeme[i];
 
-	return hashvalue % HASH_TABLE_SIZE; // return an index in [0, HASH_TABLE_SIZE)
+	return value % HASH_TABLE_SIZE;
 }
 
 /* Create an entry for a lexeme, token pair. This will be called from the insert function */
@@ -213,7 +220,8 @@ entry_t* insert( entry_t** hash_table_ptr, char* lexeme, int value, int data_typ
 		exit(1);
 	}
 
-	head = hash_table_ptr[idx]; // get the head entry at this index
+	head = hash_table_ptr[idx];
+	// printf("Index: %d\n",idx);// get the head entry at this index
 
 	if(head == NULL) // This is the first lexeme that matches this myhash index
 	{
@@ -225,7 +233,8 @@ entry_t* insert( entry_t** hash_table_ptr, char* lexeme, int value, int data_typ
 		hash_table_ptr[idx] = new_entry;
 	}
 
-	// printf("Insert complete:%s\n",lexeme);
+	// printf("in insert! Symbol table :%p, entry: %p, text: %s\n",hash_table_ptr, hash_table_ptr[idx], lexeme);
+	// display_symbol_table(hash_table_ptr);
 	return hash_table_ptr[idx];
 }
 
@@ -286,6 +295,7 @@ void display_symbol_table(entry_t** hash_table_ptr)
 
 	for( i=0; i < HASH_TABLE_SIZE; i++)
 	{
+		// printf("In loop\n");
 		traverser = hash_table_ptr[i];
 		while( traverser != NULL)
 		{
@@ -333,10 +343,13 @@ void display_constant_table(entry_t** hash_table_ptr)
 void display_all()
 {
 		int i;
-		for(i=0; i<=table_index; i++)
-		{
-			printf("Scope: %d\n",i);
-			display_symbol_table(symbol_table_list[i].symbol_table);
-			printf("\n\n");
-		}
+		// for(i=0; i<=table_index; i++)
+		// {
+		// 	printf("Scope: %d\n",i);
+		// 	display_symbol_table(symbol_table_list[i].symbol_table);
+		// 	printf("\n\n");
+		// }
+
+		display_symbol_table(symbol_table_list[0].symbol_table);
+		display_symbol_table(symbol_table_list[1].symbol_table);
 }

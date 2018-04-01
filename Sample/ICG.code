@@ -1,7 +1,5 @@
-0: ifa<bgoto 2
-1: goto 3
-2: a=b
-3: t0=b+5.000000
-4: a=t0
-5: t1=a*9.000000
-6: b=t1
+0: ifa<3goto 2
+1: goto 4
+2: a=4
+3: goto _
+4: a=5

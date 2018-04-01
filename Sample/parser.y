@@ -78,6 +78,7 @@
 %type <content> lhs
 %type <content> sub_expr
 %type <content> expression
+%type <content> expression_stmt
 %type <content> unary_expr
 %type <content> arithmetic_expr
 %type <content> assignment_expr
@@ -140,6 +141,7 @@ function: type
 
 					compound_stmt										{
 																						is_func = 0;
+																						backpatch($8->nextlist,nextinstr);
 																					}
           ;
  /* Now we will define a grammar for how types can be specified */
@@ -218,8 +220,9 @@ statements:statements M stmt		{
 																	$$->nextlist = $3->nextlist;
 																}
 
-    |														{
+    | stmt											{
 																	$$ = new content_t();
+																	$$->nextlist = $1->nextlist;
 																}
     ;
 
@@ -227,7 +230,7 @@ statements:statements M stmt		{
 single_stmt :if_block						{$$ = new content_t(); $$->nextlist = $1->nextlist;}
     |for_block									{$$ = new content_t();}
     |while_block								{$$ = new content_t(); $$->nextlist = $1->nextlist;}
-    |declaration								{$$ = new content_t();}
+	|declaration								  {$$ = new content_t(); /*printf("%d\n",nextinstr);/*$$->nextlist = $1->nextlist;*/}
     |function_call ';'					{$$ = new content_t();}
 		|RETURN ';'								  {
 																	if(is_func)
@@ -251,8 +254,13 @@ single_stmt :if_block						{$$ = new content_t(); $$->nextlist = $1->nextlist;}
 															 }
     ;
 
-for_block:FOR '(' expression_stmt  expression_stmt ')' {is_loop = 1;} stmt {is_loop = 0;}
-    		 |FOR '(' expression_stmt expression_stmt expression ')' {is_loop = 1;} stmt {is_loop = 0;}
+/* for_block:FOR '(' expression_stmt  expression_stmt ')' {is_loop = 1;} stmt {is_loop = 0;}
+    		 |FOR '(' expression_stmt M expression_stmt M expression ')' {is_loop = 1;} M stmt {is_loop = 0;}
+				 																																																		  {
+																																																								backpatch($3->truelist,$4);
+																																																								backpatch($11->nextlist,$6);
+																																																								backpatch($7->nextlist,$4);
+				 																																																			} */
     		 ;
 
 if_block:IF '(' expression ')' M stmt 	%prec LOWER_THAN_ELSE 		{
@@ -262,16 +270,17 @@ if_block:IF '(' expression ')' M stmt 	%prec LOWER_THAN_ELSE 		{
 																																		$$->nextlist = merge($3->falselist,$6->nextlist);
 																																	}
 
-				|IF '(' expression ')' M stmt ELSE N M stmt								{
+				|IF '(' expression ')' M stmt N ELSE  M stmt								{
 																																		backpatch($3->truelist,$5);
 																																		backpatch($3->falselist,$9);
 
 																																		$$ = new content_t();
-																																		vector<int> temp = merge($6->nextlist,*$8);
+																																		vector<int> temp = merge($6->nextlist,*$7);
 																																		$$->nextlist = merge(temp,$10->nextlist);
 																																	}
     ;
 
+if_block:  specific_if;
 while_block: WHILE M '(' expression	')' M {is_loop = 1;} stmt {is_loop = 0;}		{
 																																									backpatch($8->nextlist,$2);
 																																									backpatch($4->truelist,$6);
@@ -286,7 +295,7 @@ while_block: WHILE M '(' expression	')' M {is_loop = 1;} stmt {is_loop = 0;}		{
 																																								}
 		;
 
-declaration: type  declaration_list ';'					{is_declaration = 0; rhs = 0;}
+declaration: type  declaration_list ';'					{is_declaration = 0;}
 					 | declaration_list ';'
 					 | unary_expr ';'
 
@@ -301,8 +310,8 @@ sub_decl: assignment_expr
 				;
 
 /* This is because we can have empty expession statements inside for loops */
-expression_stmt: expression ';'
-    					 | ';'
+expression_stmt: expression ';'											{$$ = new content_t(); $$->truelist = $3->truelist; $$->falselist = $3->falselist;}
+    					 | ';'																{$$ = new content_t();}
     			 		 ;
 
 expression: expression ',' sub_expr									{$$ = new content_t(); $$->truelist = $3->truelist; $$->falselist = $3->falselist;}
@@ -404,6 +413,8 @@ assignment_expr :
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
 
+																											 rhs = 0;
+
 																											}
 
     |lhs assign array_access													{
@@ -418,9 +429,11 @@ assignment_expr :
 																											 instruction = to_string(nextinstr) + string(": ") + $$->code;
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
+
+																											 rhs = 0;
 																											}
 
-    |lhs assign function_call													{type_check($1->entry->data_type,$3,1); $$ = new content_t(); $$->data_type = $3;}
+    |lhs assign function_call													{type_check($1->entry->data_type,$3,1); $$ = new content_t(); $$->data_type = $3; rhs = 0;}
 
 		|lhs assign unary_expr                            {
 																											 type_check($1->entry->data_type,$3->data_type,1);
@@ -434,6 +447,8 @@ assignment_expr :
 																											 instruction = to_string(nextinstr) + string(": ") + $$->code;
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
+
+																											 rhs = 0;
 																										 	}
 
 		|unary_expr assign unary_expr											{
@@ -448,6 +463,8 @@ assignment_expr :
 																											 instruction = to_string(nextinstr) + string(": ") + $$->code;
 																											 ICG.push_back(instruction);
 																											 nextinstr++;
+
+																											 rhs = 0;
 																										 	}
     ;
 
@@ -461,24 +478,29 @@ lhs: identifier																					{$$ = new content_t(); $$->entry = $1;}
 	 ;
 
 identifier:IDENTIFIER                                    {
-                                                          /* if(is_declaration && !rhs)
+                                                          if(is_declaration && !rhs)
                                                           {
                                                             $1 = insert(SYMBOL_TABLE,yytext,INT_MAX,current_dtype);
+																														/* display_symbol_table(SYMBOL_TABLE); */
+
                                                             if($1 == NULL) yyerror("Redeclaration of variable");
                                                           }
                                                           else
                                                           {
                                                             $1 = search_recursive(yytext);
                                                             if($1 == NULL) yyerror("Variable not declared");
-                                                            if(rhs)
-                                                            rhs = 0;
+                                                            /* if(rhs)
+                                                            rhs = 0; */
                                                           }
 
-                                                          $$ = $1; */
+																													/* display_symbol_table(SYMBOL_TABLE); */
 
-																													if(is_declaration && !rhs)
+                                                          $$ = $1;
+
+																													/* if(is_declaration && !rhs)
 																													{
 																															$1 = insert(SYMBOL_TABLE,yytext,INT_MAX,current_dtype);
+																															printf("In ST! Symbol table :%p, entry: %p, text: %s\n",SYMBOL_TABLE, $1, yytext);
 																															if($1 == NULL) yyerror("Redeclaration of variable");
 																													}
 																													else
@@ -486,7 +508,7 @@ identifier:IDENTIFIER                                    {
 																															$1 = search_recursive(yytext);
 																															if($1 == NULL) yyerror("Variable not declared");
 																													}
-																													$$ = $1;
+																													$$ = $1; */
                                                          }
     			 ;
 
@@ -642,7 +664,7 @@ N:			{
 					$$ = new vector<int>(nextinstr);
 
 					std::string instruction;
-					instruction = to_string(nextinstr)  + ": " + "goto _";
+					instruction = to_string(nextinstr)  + string(": ") + string("goto _");
 					ICG.push_back(instruction);
 					nextinstr++;
 				}
@@ -727,11 +749,8 @@ void displayICG()
 {
 	ofstream outfile("ICG.code");
 
-	for(int i=0; i<ICG.size();i++){
-		outfile << ICG[i] <<endl;
-		cout<<ICG[i] <<endl;
-	}
-
+	for(int i=0; i<ICG.size();i++)
+	outfile << ICG[i] <<endl;
 
 	outfile.close();
 }
@@ -757,13 +776,15 @@ int main(int argc, char *argv[])
 	{
 			printf("\nPARSING FAILED!\n\n\n");
 	}
-/*
-	printf("SYMBOL TABLES\n\n");
+
+	/* printf("SYMBOL TABLES\n\n");
 	display_all();
 
 	printf("CONSTANT TABLE");
-	display_constant_table(constant_table);
-*/
+	display_constant_table(constant_table); */
+
+	/* display_all(); */
+
 	displayICG();
 
 

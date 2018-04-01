@@ -1,13 +1,8 @@
 int main()
 {
-  int a,b;
-
-  if(a<b)/*{
-    a = 10;
-    b = 5;
-  }*/
-  a = b;
-
-  a = b + 5;
-  b = a * 9;
+  int a;
+  if(a<3)
+  a = 4;
+  else
+  a = 5;
 }
