@@ -1,0 +1,20 @@
+<<<<<<< HEAD
+0: ifa<bgoto 2
+1: goto 7
+2: ifc>dgoto 4
+3: goto 7
+4: a=10.000000
+5: b=10.000000
+6: goto 8
+7: c=10.000000
+8: ifc==dgoto 10
+9: goto 11
+10: d=10.000000
+11: exit
+=======
+0: ifa<3goto 2
+1: goto 4
+2: a=4
+3: goto _
+4: a=5
+>>>>>>> 1d2bbdacc1c12349279560d1c8a691cd4aaf014f

@@ -3,6 +3,14 @@ Terminals unused in grammar
    CONST
 
 
+Rules useless in parser due to conflicts
+
+  120 N: %empty
+
+
+State 183 conflicts: 1 reduce/reduce
+
+
 Grammar
 
     0 $accept: starter $end
@@ -58,7 +66,7 @@ Grammar
    34 compound_stmt: '{' $@3 statements '}'
 
    35 statements: statements M stmt
-   36           | %empty
+   36           | stmt
 
    37 single_stmt: if_block
    38            | for_block
@@ -79,7 +87,7 @@ Grammar
    49 for_block: FOR '(' expression_stmt expression_stmt expression ')' $@5 stmt
 
    50 if_block: IF '(' expression ')' M stmt
-   51         | IF '(' expression ')' M stmt ELSE N M stmt
+   51         | IF '(' expression ')' M stmt N ELSE M stmt
 
    52 $@6: %empty
 
@@ -266,7 +274,7 @@ arguments (70)
 arg (71)
     on left: 30, on right: 28 29
 stmt (72)
-    on left: 31 32, on right: 35 47 49 50 51 54
+    on left: 31 32, on right: 35 36 47 49 50 51 54
 compound_stmt (73)
     on left: 34, on right: 7 31
 $@3 (74)
@@ -2034,34 +2042,6 @@ State 137
 
    34 compound_stmt: '{' $@3 . statements '}'
 
-    $default  reduce using rule 36 (statements)
-
-    statements  go to state 138
-
-
-State 138
-
-   34 compound_stmt: '{' $@3 statements . '}'
-   35 statements: statements . M stmt
-
-    '}'  shift, and go to state 139
-
-    $default  reduce using rule 119 (M)
-
-    M  go to state 140
-
-
-State 139
-
-   34 compound_stmt: '{' $@3 statements '}' .
-
-    $default  reduce using rule 34 (compound_stmt)
-
-
-State 140
-
-   35 statements: statements M . stmt
-
     IDENTIFIER  shift, and go to state 1
     INCREMENT   shift, and go to state 2
     DECREMENT   shift, and go to state 3
@@ -2074,75 +2054,76 @@ State 140
     VOID        shift, and go to state 10
     CHAR        shift, and go to state 11
     FLOAT       shift, and go to state 12
-    IF          shift, and go to state 141
-    FOR         shift, and go to state 142
-    WHILE       shift, and go to state 143
-    CONTINUE    shift, and go to state 144
-    BREAK       shift, and go to state 145
-    RETURN      shift, and go to state 146
+    IF          shift, and go to state 138
+    FOR         shift, and go to state 139
+    WHILE       shift, and go to state 140
+    CONTINUE    shift, and go to state 141
+    BREAK       shift, and go to state 142
+    RETURN      shift, and go to state 143
     '{'         shift, and go to state 133
 
-    type              go to state 147
+    type              go to state 144
     data_type         go to state 17
     sign_specifier    go to state 18
     type_specifier    go to state 19
-    stmt              go to state 148
-    compound_stmt     go to state 149
-    single_stmt       go to state 150
-    for_block         go to state 151
-    if_block          go to state 152
-    while_block       go to state 153
-    declaration       go to state 154
+    stmt              go to state 145
+    compound_stmt     go to state 146
+    statements        go to state 147
+    single_stmt       go to state 148
+    for_block         go to state 149
+    if_block          go to state 150
+    while_block       go to state 151
+    declaration       go to state 152
     declaration_list  go to state 21
     sub_decl          go to state 22
     assignment_expr   go to state 23
     unary_expr        go to state 24
     lhs               go to state 25
-    identifier        go to state 155
+    identifier        go to state 153
     array_access      go to state 27
-    function_call     go to state 156
+    function_call     go to state 154
 
 
-State 141
+State 138
 
    50 if_block: IF . '(' expression ')' M stmt
-   51         | IF . '(' expression ')' M stmt ELSE N M stmt
+   51         | IF . '(' expression ')' M stmt N ELSE M stmt
 
-    '('  shift, and go to state 157
+    '('  shift, and go to state 155
 
 
-State 142
+State 139
 
    47 for_block: FOR . '(' expression_stmt expression_stmt ')' $@4 stmt
    49          | FOR . '(' expression_stmt expression_stmt expression ')' $@5 stmt
 
-    '('  shift, and go to state 158
+    '('  shift, and go to state 156
 
 
-State 143
+State 140
 
    54 while_block: WHILE . M '(' expression ')' M $@6 stmt $@7
 
     $default  reduce using rule 119 (M)
 
-    M  go to state 159
+    M  go to state 157
 
 
-State 144
+State 141
 
    43 single_stmt: CONTINUE . ';'
 
-    ';'  shift, and go to state 160
+    ';'  shift, and go to state 158
 
 
-State 145
+State 142
 
    44 single_stmt: BREAK . ';'
 
-    ';'  shift, and go to state 161
+    ';'  shift, and go to state 159
 
 
-State 146
+State 143
 
    42 single_stmt: RETURN . ';'
    45            | RETURN . sub_expr ';'
@@ -2157,9 +2138,9 @@ State 146
     '-'             shift, and go to state 65
     '!'             shift, and go to state 93
     '('             shift, and go to state 66
-    ';'             shift, and go to state 162
+    ';'             shift, and go to state 160
 
-    sub_expr         go to state 163
+    sub_expr         go to state 161
     assignment_expr  go to state 96
     unary_expr       go to state 97
     lhs              go to state 25
@@ -2169,7 +2150,7 @@ State 146
     array_access     go to state 100
 
 
-State 147
+State 144
 
    55 declaration: type . declaration_list ';'
 
@@ -2186,56 +2167,68 @@ State 147
     array_access      go to state 27
 
 
-State 148
+State 145
 
-   35 statements: statements M stmt .
+   36 statements: stmt .
 
-    $default  reduce using rule 35 (statements)
+    $default  reduce using rule 36 (statements)
 
 
-State 149
+State 146
 
    31 stmt: compound_stmt .
 
     $default  reduce using rule 31 (stmt)
 
 
-State 150
+State 147
+
+   34 compound_stmt: '{' $@3 statements . '}'
+   35 statements: statements . M stmt
+
+    '}'  shift, and go to state 162
+
+    $default  reduce using rule 119 (M)
+
+    M  go to state 163
+
+
+State 148
 
    32 stmt: single_stmt .
 
     $default  reduce using rule 32 (stmt)
 
 
-State 151
+State 149
 
    38 single_stmt: for_block .
 
     $default  reduce using rule 38 (single_stmt)
 
 
-State 152
+State 150
 
    37 single_stmt: if_block .
 
     $default  reduce using rule 37 (single_stmt)
 
 
-State 153
+State 151
 
    39 single_stmt: while_block .
 
     $default  reduce using rule 39 (single_stmt)
 
 
-State 154
+State 152
 
    40 single_stmt: declaration .
 
     $default  reduce using rule 40 (single_stmt)
 
 
-State 155
+State 153
 
    61 sub_decl: identifier .
    84 unary_expr: identifier . INCREMENT
@@ -2255,17 +2248,17 @@ State 155
     $default  reduce using rule 88 (lhs)
 
 
-State 156
+State 154
 
    41 single_stmt: function_call . ';'
 
     ';'  shift, and go to state 164
 
 
-State 157
+State 155
 
    50 if_block: IF '(' . expression ')' M stmt
-   51         | IF '(' . expression ')' M stmt ELSE N M stmt
+   51         | IF '(' . expression ')' M stmt N ELSE M stmt
 
     IDENTIFIER      shift, and go to state 1
     DEC_CONSTANT    shift, and go to state 61
@@ -2289,7 +2282,7 @@ State 157
     array_access     go to state 100
 
 
-State 158
+State 156
 
    47 for_block: FOR '(' . expression_stmt expression_stmt ')' $@4 stmt
    49          | FOR '(' . expression_stmt expression_stmt expression ')' $@5 stmt
@@ -2318,35 +2311,35 @@ State 158
     array_access     go to state 100
 
 
-State 159
+State 157
 
    54 while_block: WHILE M . '(' expression ')' M $@6 stmt $@7
 
     '('  shift, and go to state 170
 
 
-State 160
+State 158
 
    43 single_stmt: CONTINUE ';' .
 
     $default  reduce using rule 43 (single_stmt)
 
 
-State 161
+State 159
 
    44 single_stmt: BREAK ';' .
 
     $default  reduce using rule 44 (single_stmt)
 
 
-State 162
+State 160
 
    42 single_stmt: RETURN ';' .
 
     $default  reduce using rule 42 (single_stmt)
 
 
-State 163
+State 161
 
    45 single_stmt: RETURN sub_expr . ';'
    67 sub_expr: sub_expr . '>' sub_expr
@@ -2369,6 +2362,58 @@ State 163
     ';'          shift, and go to state 171
 
 
+State 162
+
+   34 compound_stmt: '{' $@3 statements '}' .
+
+    $default  reduce using rule 34 (compound_stmt)
+
+
+State 163
+
+   35 statements: statements M . stmt
+
+    IDENTIFIER  shift, and go to state 1
+    INCREMENT   shift, and go to state 2
+    DECREMENT   shift, and go to state 3
+    SHORT       shift, and go to state 4
+    INT         shift, and go to state 5
+    LONG        shift, and go to state 6
+    LONG_LONG   shift, and go to state 7
+    SIGNED      shift, and go to state 8
+    UNSIGNED    shift, and go to state 9
+    VOID        shift, and go to state 10
+    CHAR        shift, and go to state 11
+    FLOAT       shift, and go to state 12
+    IF          shift, and go to state 138
+    FOR         shift, and go to state 139
+    WHILE       shift, and go to state 140
+    CONTINUE    shift, and go to state 141
+    BREAK       shift, and go to state 142
+    RETURN      shift, and go to state 143
+    '{'         shift, and go to state 133
+
+    type              go to state 144
+    data_type         go to state 17
+    sign_specifier    go to state 18
+    type_specifier    go to state 19
+    stmt              go to state 172
+    compound_stmt     go to state 146
+    single_stmt       go to state 148
+    for_block         go to state 149
+    if_block          go to state 150
+    while_block       go to state 151
+    declaration       go to state 152
+    declaration_list  go to state 21
+    sub_decl          go to state 22
+    assignment_expr   go to state 23
+    unary_expr        go to state 24
+    lhs               go to state 25
+    identifier        go to state 153
+    array_access      go to state 27
+    function_call     go to state 154
+
+
 State 164
 
    41 single_stmt: function_call ';' .
@@ -2379,11 +2424,11 @@ State 164
 State 165
 
    50 if_block: IF '(' expression . ')' M stmt
-   51         | IF '(' expression . ')' M stmt ELSE N M stmt
+   51         | IF '(' expression . ')' M stmt N ELSE M stmt
    65 expression: expression . ',' sub_expr
 
-    ','  shift, and go to state 172
-    ')'  shift, and go to state 173
+    ','  shift, and go to state 173
+    ')'  shift, and go to state 174
 
 
 State 166
@@ -2434,7 +2479,7 @@ State 168
     '('             shift, and go to state 66
     ';'             shift, and go to state 167
 
-    expression_stmt  go to state 174
+    expression_stmt  go to state 175
     expression       go to state 169
     sub_expr         go to state 166
     assignment_expr  go to state 96
@@ -2451,8 +2496,8 @@ State 169
    63 expression_stmt: expression . ';'
    65 expression: expression . ',' sub_expr
 
-    ','  shift, and go to state 172
-    ';'  shift, and go to state 175
+    ','  shift, and go to state 173
+    ';'  shift, and go to state 176
 
 
 State 170
@@ -2470,7 +2515,7 @@ State 170
     '!'             shift, and go to state 93
     '('             shift, and go to state 66
 
-    expression       go to state 176
+    expression       go to state 177
     sub_expr         go to state 166
     assignment_expr  go to state 96
     unary_expr       go to state 97
@@ -2490,6 +2535,13 @@ State 171
 
 State 172
 
+   35 statements: statements M stmt .
+
+    $default  reduce using rule 35 (statements)
+
+
+State 173
+
    65 expression: expression ',' . sub_expr
 
     IDENTIFIER      shift, and go to state 1
@@ -2503,7 +2555,7 @@ State 172
     '!'             shift, and go to state 93
     '('             shift, and go to state 66
 
-    sub_expr         go to state 177
+    sub_expr         go to state 178
     assignment_expr  go to state 96
     unary_expr       go to state 97
     lhs              go to state 25
@@ -2513,17 +2565,17 @@ State 172
     array_access     go to state 100
 
 
-State 173
+State 174
 
    50 if_block: IF '(' expression ')' . M stmt
-   51         | IF '(' expression ')' . M stmt ELSE N M stmt
+   51         | IF '(' expression ')' . M stmt N ELSE M stmt
 
     $default  reduce using rule 119 (M)
 
-    M  go to state 178
+    M  go to state 179
 
 
-State 174
+State 175
 
    47 for_block: FOR '(' expression_stmt expression_stmt . ')' $@4 stmt
    49          | FOR '(' expression_stmt expression_stmt . expression ')' $@5 stmt
@@ -2538,9 +2590,9 @@ State 174
     '-'             shift, and go to state 65
     '!'             shift, and go to state 93
     '('             shift, and go to state 66
-    ')'             shift, and go to state 179
+    ')'             shift, and go to state 180
 
-    expression       go to state 180
+    expression       go to state 181
     sub_expr         go to state 166
     assignment_expr  go to state 96
     unary_expr       go to state 97
@@ -2551,23 +2603,23 @@ State 174
     array_access     go to state 100
 
 
-State 175
+State 176
 
    63 expression_stmt: expression ';' .
 
     $default  reduce using rule 63 (expression_stmt)
 
 
-State 176
+State 177
 
    54 while_block: WHILE M '(' expression . ')' M $@6 stmt $@7
    65 expression: expression . ',' sub_expr
 
-    ','  shift, and go to state 172
-    ')'  shift, and go to state 181
+    ','  shift, and go to state 173
+    ')'  shift, and go to state 182
 
 
-State 177
+State 178
 
    65 expression: expression ',' sub_expr .
    67 sub_expr: sub_expr . '>' sub_expr
@@ -2591,10 +2643,10 @@ State 177
     $default  reduce using rule 65 (expression)
 
 
-State 178
+State 179
 
    50 if_block: IF '(' expression ')' M . stmt
-   51         | IF '(' expression ')' M . stmt ELSE N M stmt
+   51         | IF '(' expression ')' M . stmt N ELSE M stmt
 
     IDENTIFIER  shift, and go to state 1
     INCREMENT   shift, and go to state 2
@@ -2608,73 +2660,75 @@ State 178
     VOID        shift, and go to state 10
     CHAR        shift, and go to state 11
     FLOAT       shift, and go to state 12
-    IF          shift, and go to state 141
-    FOR         shift, and go to state 142
-    WHILE       shift, and go to state 143
-    CONTINUE    shift, and go to state 144
-    BREAK       shift, and go to state 145
-    RETURN      shift, and go to state 146
+    IF          shift, and go to state 138
+    FOR         shift, and go to state 139
+    WHILE       shift, and go to state 140
+    CONTINUE    shift, and go to state 141
+    BREAK       shift, and go to state 142
+    RETURN      shift, and go to state 143
     '{'         shift, and go to state 133
 
-    type              go to state 147
+    type              go to state 144
     data_type         go to state 17
     sign_specifier    go to state 18
     type_specifier    go to state 19
-    stmt              go to state 182
-    compound_stmt     go to state 149
-    single_stmt       go to state 150
-    for_block         go to state 151
-    if_block          go to state 152
-    while_block       go to state 153
-    declaration       go to state 154
+    stmt              go to state 183
+    compound_stmt     go to state 146
+    single_stmt       go to state 148
+    for_block         go to state 149
+    if_block          go to state 150
+    while_block       go to state 151
+    declaration       go to state 152
     declaration_list  go to state 21
     sub_decl          go to state 22
     assignment_expr   go to state 23
     unary_expr        go to state 24
     lhs               go to state 25
-    identifier        go to state 155
+    identifier        go to state 153
     array_access      go to state 27
-    function_call     go to state 156
+    function_call     go to state 154
 
 
-State 179
+State 180
 
    47 for_block: FOR '(' expression_stmt expression_stmt ')' . $@4 stmt
 
     $default  reduce using rule 46 ($@4)
 
-    $@4  go to state 183
+    $@4  go to state 184
 
 
-State 180
+State 181
 
    49 for_block: FOR '(' expression_stmt expression_stmt expression . ')' $@5 stmt
    65 expression: expression . ',' sub_expr
 
-    ','  shift, and go to state 172
-    ')'  shift, and go to state 184
+    ','  shift, and go to state 173
+    ')'  shift, and go to state 185
 
 
-State 181
+State 182
 
    54 while_block: WHILE M '(' expression ')' . M $@6 stmt $@7
 
     $default  reduce using rule 119 (M)
 
-    M  go to state 185
-
-
-State 182
-
-   50 if_block: IF '(' expression ')' M stmt .
-   51         | IF '(' expression ')' M stmt . ELSE N M stmt
-
-    ELSE  shift, and go to state 186
-
-    $default  reduce using rule 50 (if_block)
+    M  go to state 186
 
 
 State 183
+
+   50 if_block: IF '(' expression ')' M stmt .
+   51         | IF '(' expression ')' M stmt . N ELSE M stmt
+
+    ELSE      reduce using rule 50 (if_block)
+    ELSE      [reduce using rule 120 (N)]
+    $default  reduce using rule 50 (if_block)
+
+    N  go to state 187
+
+
+State 184
 
    47 for_block: FOR '(' expression_stmt expression_stmt ')' $@4 . stmt
 
@@ -2690,70 +2744,68 @@ State 183
     VOID        shift, and go to state 10
     CHAR        shift, and go to state 11
     FLOAT       shift, and go to state 12
-    IF          shift, and go to state 141
-    FOR         shift, and go to state 142
-    WHILE       shift, and go to state 143
-    CONTINUE    shift, and go to state 144
-    BREAK       shift, and go to state 145
-    RETURN      shift, and go to state 146
+    IF          shift, and go to state 138
+    FOR         shift, and go to state 139
+    WHILE       shift, and go to state 140
+    CONTINUE    shift, and go to state 141
+    BREAK       shift, and go to state 142
+    RETURN      shift, and go to state 143
     '{'         shift, and go to state 133
 
-    type              go to state 147
+    type              go to state 144
     data_type         go to state 17
     sign_specifier    go to state 18
     type_specifier    go to state 19
-    stmt              go to state 187
-    compound_stmt     go to state 149
-    single_stmt       go to state 150
-    for_block         go to state 151
-    if_block          go to state 152
-    while_block       go to state 153
-    declaration       go to state 154
+    stmt              go to state 188
+    compound_stmt     go to state 146
+    single_stmt       go to state 148
+    for_block         go to state 149
+    if_block          go to state 150
+    while_block       go to state 151
+    declaration       go to state 152
     declaration_list  go to state 21
     sub_decl          go to state 22
     assignment_expr   go to state 23
     unary_expr        go to state 24
     lhs               go to state 25
-    identifier        go to state 155
+    identifier        go to state 153
     array_access      go to state 27
-    function_call     go to state 156
+    function_call     go to state 154
 
 
-State 184
+State 185
 
    49 for_block: FOR '(' expression_stmt expression_stmt expression ')' . $@5 stmt
 
     $default  reduce using rule 48 ($@5)
 
-    $@5  go to state 188
+    $@5  go to state 189
 
 
-State 185
+State 186
 
    54 while_block: WHILE M '(' expression ')' M . $@6 stmt $@7
 
     $default  reduce using rule 52 ($@6)
 
-    $@6  go to state 189
-
-
-State 186
-
-   51 if_block: IF '(' expression ')' M stmt ELSE . N M stmt
-
-    $default  reduce using rule 120 (N)
-
-    N  go to state 190
+    $@6  go to state 190
 
 
 State 187
+
+   51 if_block: IF '(' expression ')' M stmt N . ELSE M stmt
+
+    ELSE  shift, and go to state 191
+
+
+State 188
 
    47 for_block: FOR '(' expression_stmt expression_stmt ')' $@4 stmt .
 
     $default  reduce using rule 47 (for_block)
 
 
-State 188
+State 189
 
    49 for_block: FOR '(' expression_stmt expression_stmt expression ')' $@5 . stmt
 
@@ -2769,36 +2821,36 @@ State 188
     VOID        shift, and go to state 10
     CHAR        shift, and go to state 11
     FLOAT       shift, and go to state 12
-    IF          shift, and go to state 141
-    FOR         shift, and go to state 142
-    WHILE       shift, and go to state 143
-    CONTINUE    shift, and go to state 144
-    BREAK       shift, and go to state 145
-    RETURN      shift, and go to state 146
+    IF          shift, and go to state 138
+    FOR         shift, and go to state 139
+    WHILE       shift, and go to state 140
+    CONTINUE    shift, and go to state 141
+    BREAK       shift, and go to state 142
+    RETURN      shift, and go to state 143
     '{'         shift, and go to state 133
 
-    type              go to state 147
+    type              go to state 144
     data_type         go to state 17
     sign_specifier    go to state 18
     type_specifier    go to state 19
-    stmt              go to state 191
-    compound_stmt     go to state 149
-    single_stmt       go to state 150
-    for_block         go to state 151
-    if_block          go to state 152
-    while_block       go to state 153
-    declaration       go to state 154
+    stmt              go to state 192
+    compound_stmt     go to state 146
+    single_stmt       go to state 148
+    for_block         go to state 149
+    if_block          go to state 150
+    while_block       go to state 151
+    declaration       go to state 152
     declaration_list  go to state 21
     sub_decl          go to state 22
     assignment_expr   go to state 23
     unary_expr        go to state 24
     lhs               go to state 25
-    identifier        go to state 155
+    identifier        go to state 153
     array_access      go to state 27
-    function_call     go to state 156
+    function_call     go to state 154
 
 
-State 189
+State 190
 
    54 while_block: WHILE M '(' expression ')' M $@6 . stmt $@7
 
@@ -2814,63 +2866,63 @@ State 189
     VOID        shift, and go to state 10
     CHAR        shift, and go to state 11
     FLOAT       shift, and go to state 12
-    IF          shift, and go to state 141
-    FOR         shift, and go to state 142
-    WHILE       shift, and go to state 143
-    CONTINUE    shift, and go to state 144
-    BREAK       shift, and go to state 145
-    RETURN      shift, and go to state 146
+    IF          shift, and go to state 138
+    FOR         shift, and go to state 139
+    WHILE       shift, and go to state 140
+    CONTINUE    shift, and go to state 141
+    BREAK       shift, and go to state 142
+    RETURN      shift, and go to state 143
     '{'         shift, and go to state 133
 
-    type              go to state 147
+    type              go to state 144
     data_type         go to state 17
     sign_specifier    go to state 18
     type_specifier    go to state 19
-    stmt              go to state 192
-    compound_stmt     go to state 149
-    single_stmt       go to state 150
-    for_block         go to state 151
-    if_block          go to state 152
-    while_block       go to state 153
-    declaration       go to state 154
+    stmt              go to state 193
+    compound_stmt     go to state 146
+    single_stmt       go to state 148
+    for_block         go to state 149
+    if_block          go to state 150
+    while_block       go to state 151
+    declaration       go to state 152
     declaration_list  go to state 21
     sub_decl          go to state 22
     assignment_expr   go to state 23
     unary_expr        go to state 24
     lhs               go to state 25
-    identifier        go to state 155
+    identifier        go to state 153
     array_access      go to state 27
-    function_call     go to state 156
-
-
-State 190
-
-   51 if_block: IF '(' expression ')' M stmt ELSE N . M stmt
-
-    $default  reduce using rule 119 (M)
-
-    M  go to state 193
+    function_call     go to state 154
 
 
 State 191
+
+   51 if_block: IF '(' expression ')' M stmt N ELSE . M stmt
+
+    $default  reduce using rule 119 (M)
+
+    M  go to state 194
+
+
+State 192
 
    49 for_block: FOR '(' expression_stmt expression_stmt expression ')' $@5 stmt .
 
     $default  reduce using rule 49 (for_block)
 
 
-State 192
+State 193
 
    54 while_block: WHILE M '(' expression ')' M $@6 stmt . $@7
 
     $default  reduce using rule 53 ($@7)
 
-    $@7  go to state 194
+    $@7  go to state 195
 
 
-State 193
+State 194
 
-   51 if_block: IF '(' expression ')' M stmt ELSE N M . stmt
+   51 if_block: IF '(' expression ')' M stmt N ELSE M . stmt
 
     IDENTIFIER  shift, and go to state 1
     INCREMENT   shift, and go to state 2
@@ -2884,44 +2936,44 @@ State 193
     VOID        shift, and go to state 10
     CHAR        shift, and go to state 11
     FLOAT       shift, and go to state 12
-    IF          shift, and go to state 141
-    FOR         shift, and go to state 142
-    WHILE       shift, and go to state 143
-    CONTINUE    shift, and go to state 144
-    BREAK       shift, and go to state 145
-    RETURN      shift, and go to state 146
+    IF          shift, and go to state 138
+    FOR         shift, and go to state 139
+    WHILE       shift, and go to state 140
+    CONTINUE    shift, and go to state 141
+    BREAK       shift, and go to state 142
+    RETURN      shift, and go to state 143
     '{'         shift, and go to state 133
 
-    type              go to state 147
+    type              go to state 144
     data_type         go to state 17
     sign_specifier    go to state 18
     type_specifier    go to state 19
-    stmt              go to state 195
-    compound_stmt     go to state 149
-    single_stmt       go to state 150
-    for_block         go to state 151
-    if_block          go to state 152
-    while_block       go to state 153
-    declaration       go to state 154
+    stmt              go to state 196
+    compound_stmt     go to state 146
+    single_stmt       go to state 148
+    for_block         go to state 149
+    if_block          go to state 150
+    while_block       go to state 151
+    declaration       go to state 152
     declaration_list  go to state 21
     sub_decl          go to state 22
     assignment_expr   go to state 23
     unary_expr        go to state 24
     lhs               go to state 25
-    identifier        go to state 155
+    identifier        go to state 153
     array_access      go to state 27
-    function_call     go to state 156
+    function_call     go to state 154
 
 
-State 194
+State 195
 
    54 while_block: WHILE M '(' expression ')' M $@6 stmt $@7 .
 
     $default  reduce using rule 54 (while_block)
 
 
-State 195
+State 196
 
-   51 if_block: IF '(' expression ')' M stmt ELSE N M stmt .
+   51 if_block: IF '(' expression ')' M stmt N ELSE M stmt .
 
     $default  reduce using rule 51 (if_block)
