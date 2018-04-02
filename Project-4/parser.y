@@ -63,7 +63,7 @@
 %token INCREMENT DECREMENT
 
  /* Data types */
-%token SHORT INT LONG LONG_LONG SIGNED UNSIGNED CONST VOID CHAR FLOAT
+%token SHORT INT LONG LONG_LONG SIGNED UNSIGNED CONST VOID CHAR FLOAT CHAR_STAR
 
  /* Keywords */
 %token IF FOR WHILE CONTINUE BREAK RETURN
@@ -176,6 +176,7 @@ type_specifier :INT                    {current_dtype = INT;}
 		|CHAR 														 {current_dtype = CHAR;}
 		|FLOAT 														 {current_dtype = FLOAT;}
 		|VOID															 {current_dtype = VOID;}
+		|CHAR_STAR												 {current_dtype = STRING;}
     ;
 
  /* grammar rules for argument list */

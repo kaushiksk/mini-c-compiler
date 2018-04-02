@@ -1,41 +1,44 @@
-0: fun:
-1: arg a
-2: arg b
-3: arg c
-4: main:
-5: arg argc
-6: arg argv
-7: i = 0
-8: if i < 10 goto 12
-9: goto 33
-10: i++
-11: goto 8
-12: i = 2
-13: t0 = 2 + 3
-14: if j < t0 goto 16
-15: goto 32
-16: i = 3
-17: t1 = i - 2
-18: t2 = t1 + 6
-19: j = t2
-20: j = arr[7]
-21: if 2 < 4 goto 23
-22: goto 25
-23: goto 32
-24: goto 31
-25: if 2 > 3 goto 27
-26: goto 29
-27: goto 13
-28: goto 31
-29: t3 = 4 + 5
-30: i = t3
-31: goto 13
-32: goto 10
-33: t4 = i - j
-34: param t4
-35: t5 = 2 + 3
-36: param t5
-37: t6 = i + j
-38: param t6
-39: call fun
-40: exit
+0: fun2:
+1: arg s
+2: fun:
+3: arg a
+4: arg b
+5: arg c
+6: param "What else can I print?"
+7: call fun2
+8: main:
+9: arg argc
+10: i = 0
+11: if i < 10 goto 15
+12: goto 36
+13: i++
+14: goto 11
+15: i = 2
+16: t0 = 2 + 3
+17: if j < t0 goto 19
+18: goto 35
+19: i = 3
+20: t1 = i - 2
+21: t2 = t1 + 6
+22: j = t2
+23: j = arr[7]
+24: if 2 < 4 goto 26
+25: goto 28
+26: goto 35
+27: goto 34
+28: if 2 > 3 goto 30
+29: goto 32
+30: goto 16
+31: goto 34
+32: t3 = 4 + 5
+33: i = t3
+34: goto 16
+35: goto 13
+36: t4 = i - j
+37: param t4
+38: t5 = 2 + 3
+39: param t5
+40: t6 = i + j
+41: param t6
+42: call fun
+43: exit

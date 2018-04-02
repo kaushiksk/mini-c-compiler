@@ -74,15 +74,16 @@ extern int yydebug;
     VOID = 284,
     CHAR = 285,
     FLOAT = 286,
-    IF = 287,
-    FOR = 288,
-    WHILE = 289,
-    CONTINUE = 290,
-    BREAK = 291,
-    RETURN = 292,
-    UMINUS = 293,
-    LOWER_THAN_ELSE = 294,
-    ELSE = 295
+    CHAR_STAR = 287,
+    IF = 288,
+    FOR = 289,
+    WHILE = 290,
+    CONTINUE = 291,
+    BREAK = 292,
+    RETURN = 293,
+    UMINUS = 294,
+    LOWER_THAN_ELSE = 295,
+    ELSE = 296
   };
 #endif
 /* Tokens.  */
@@ -115,15 +116,16 @@ extern int yydebug;
 #define VOID 284
 #define CHAR 285
 #define FLOAT 286
-#define IF 287
-#define FOR 288
-#define WHILE 289
-#define CONTINUE 290
-#define BREAK 291
-#define RETURN 292
-#define UMINUS 293
-#define LOWER_THAN_ELSE 294
-#define ELSE 295
+#define CHAR_STAR 287
+#define IF 288
+#define FOR 289
+#define WHILE 290
+#define CONTINUE 291
+#define BREAK 292
+#define RETURN 293
+#define UMINUS 294
+#define LOWER_THAN_ELSE 295
+#define ELSE 296
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -139,7 +141,7 @@ union YYSTYPE
 	vector<int>* nextlist;
 	int instr;
 
-#line 143 "y.tab.h" /* yacc.c:1909  */
+#line 145 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

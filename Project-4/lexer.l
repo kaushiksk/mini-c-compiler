@@ -25,6 +25,7 @@ hex [0-9a-f]
   /* Keywords*/
 "int"                             {return INT;}
 "char"                            {return CHAR;}
+"char*"                           {return CHAR_STAR;}
 "float"                           {return FLOAT;}
 "void"                            {return VOID;}
 "long"                            {return LONG;}
