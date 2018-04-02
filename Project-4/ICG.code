@@ -1,16 +1,27 @@
-0: if a < b goto 2
-1: goto 6
-2: if c > d goto 4
-3: goto 6
-4: a = 10
-5: goto 7
-6: c = 10
-7: if a > b goto 9
-8: goto 14
-9: if c > d goto 11
-10: goto 12
-11: goto 7
-12: a = c
-13: goto 7
-14: b = d
-15: exit
+0: i = 0
+1: if i < 10 goto 5
+2: goto 26
+3: i++
+4: goto 1
+5: i = 2
+6: t0 = 2 + 3
+7: if j < t0 goto 9
+8: goto 25
+9: i = 3
+10: t1 = i - 2
+11: t2 = t1 + 6
+12: j = t2
+13: j = arr[7]
+14: if 2 < 4 goto 16
+15: goto 18
+16: goto 25
+17: goto 24
+18: if 2 > 3 goto 20
+19: goto 22
+20: goto 6
+21: goto 24
+22: t3 = 4 + 5
+23: i = t3
+24: goto 6
+25: goto 3
+26: exit
