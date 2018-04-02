@@ -1067,7 +1067,7 @@ YY_RULE_SETUP
                                     }
                                     else
                                     {
-                                      insert(constant_table,yytext,INT_MAX,STRING);
+                                      yylval.entry = insert(constant_table,yytext,INT_MAX,STRING);
                                       return STRING;
                                     }
                                   }

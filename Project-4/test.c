@@ -1,11 +1,16 @@
-int main()
+
+void fun(int a, int b, int c)
+{
+}
+
+int main(int argc, char** argv)
 {
   int i;
+  int j;
   for(i=0;i<10;i++)
   {
     i = 2;
 
-    int j;
 
     while(j < 2 + 3)
     {
@@ -26,4 +31,6 @@ int main()
 
     }
   }
+
+  fun(i-j,2 + 3,i+j);
 }

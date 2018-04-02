@@ -64,7 +64,7 @@ hex [0-9a-f]
                                     }
                                     else
                                     {
-                                      insert(constant_table,yytext,INT_MAX,STRING);
+                                      yylval.entry = insert(constant_table,yytext,INT_MAX,STRING);
                                       return STRING;
                                     }
                                   }

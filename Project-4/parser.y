@@ -53,8 +53,7 @@
 %token <entry> IDENTIFIER
 
  /* Constants */
-%token <entry> DEC_CONSTANT HEX_CONSTANT CHAR_CONSTANT FLOAT_CONSTANT
-%token STRING
+%token <entry> DEC_CONSTANT HEX_CONSTANT CHAR_CONSTANT FLOAT_CONSTANT STRING
 
  /* Logical and Relational operators */
 %token LOGICAL_AND LOGICAL_OR LS_EQ GR_EQ EQ NOT_EQ
@@ -131,6 +130,8 @@ function: type
 																						func_type = current_dtype;
 																						is_declaration = 0;
 																						current_scope = create_new_scope();
+
+																						gencode($2->lexeme + string(":"));
 																					}
 
 					'(' argument_list ')' 					{
@@ -188,7 +189,11 @@ arguments : arguments ',' arg
     			;
 
  /* Each arg is a TYPE ID pair */
-arg : type identifier									{param_list[p_idx++] = $2->data_type;}
+arg : type identifier									{
+																				param_list[p_idx++] = $2->data_type;
+
+																				gencode(string("arg ") + $2->lexeme);
+																			}
     ;
 
  /* Generic statement. Can be compound or a single statement */
@@ -680,12 +685,16 @@ function_call: identifier '(' parameter_list ')'				{
 																													$$ = $1->data_type;
 																													check_parameter_list($1,param_list,p_idx);
 																													p_idx = 0;
+
+																													gencode(string("call ") + $1->lexeme);
 																												}
 
              | identifier '(' ')'												{
 							 																						 $$ = $1->data_type;
 																													 check_parameter_list($1,param_list,p_idx);
 																													 p_idx = 0;
+
+																													 gencode(string("call ") + $1->lexeme);
 																												}
              ;
 
@@ -694,8 +703,14 @@ parameter_list:
               |parameter
               ;
 
-parameter: sub_expr																			{param_list[p_idx++] = $1->data_type;}
-				 | STRING																				{param_list[p_idx++] = STRING;}
+parameter: sub_expr																			{
+																													param_list[p_idx++] = $1->data_type;
+																													gencode(string("param ") + $1->addr);
+																												}
+				 | STRING																				{
+					 																								param_list[p_idx++] = STRING;
+																													gencode(string("param ") + $1->lexeme);
+																												}
 				 ;
 
 M: 	 		{$$ = nextinstr;}
