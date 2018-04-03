@@ -7,38 +7,9 @@
 6: param "What else can I print?"
 7: call fun2
 8: main:
-9: arg argc
-10: i = 0
-11: if i < 10 goto 15
-12: goto 36
-13: i++
-14: goto 11
-15: i = 2
-16: t0 = 2 + 3
-17: if j < t0 goto 19
-18: goto 35
-19: i = 3
-20: t1 = i - 2
-21: t2 = t1 + 6
-22: j = t2
-23: j = arr[7]
-24: if 2 < 4 goto 26
-25: goto 28
-26: goto 35
-27: goto 34
-28: if 2 > 3 goto 30
-29: goto 32
-30: goto 16
-31: goto 34
-32: t3 = 4 + 5
-33: i = t3
-34: goto 16
-35: goto 13
-36: t4 = i - j
-37: param t4
-38: t5 = 2 + 3
-39: param t5
-40: t6 = i + j
-41: param t6
-42: call fun
-43: exit
+9: c = 5
+10: param c
+11: param 2
+12: param 5
+13: call fun
+14: exit
