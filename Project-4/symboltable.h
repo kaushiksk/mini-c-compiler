@@ -1,10 +1,10 @@
 /*
-* Compiler Design Project 3 : Semantic Analyser
+* Compiler Design Project 4: Intermediate Code Generation
 *
 * File        : symboltable.h
 *
 * Authors     : Karthik M - 15CO22, Kaushik S Kalmady - 15CO222
-* Date        : 11-3-2018
+* Date        : 4-4-2018
 */
 
 
