@@ -99,7 +99,7 @@ type_specifier :INT                    {current_dtype = INT;}
     |SHORT INT                         {current_dtype = SHORT;}
     |SHORT                             {current_dtype = SHORT;}
     |LONG                              {current_dtype = LONG;}
-		|LONG INT                          {current_dtype = LONG;}
+	|LONG INT                          {current_dtype = LONG;}
     |LONG_LONG                         {current_dtype = LONG_LONG;}
     |LONG_LONG INT                     {current_dtype = LONG_LONG;}
     ;
@@ -137,10 +137,10 @@ single_stmt :if_block
     |while_block
     |declaration
     |function_call ';'
-		|RETURN ';'
-		|CONTINUE ';'
-		|BREAK ';'
-		|RETURN sub_expr ';'
+	|RETURN ';'
+	|CONTINUE ';'
+	|BREAK ';'
+	|RETURN sub_expr ';'
     ;
 
 for_block:FOR '(' expression_stmt  expression_stmt ')' stmt
@@ -155,8 +155,8 @@ while_block: WHILE '(' expression	')' stmt
 		;
 
 declaration:type declaration_list ';'
-					 |declaration_list ';'
-					 | unary_expr ';'
+			 |declaration_list ';'
+			 | unary_expr ';'
 
 declaration_list: declaration_list ',' sub_decl
 		|sub_decl;
@@ -173,25 +173,25 @@ expression_stmt:expression ';'
     ;
 
 expression:
-    expression ',' sub_expr													{$$ = $1,$3;}
+    expression ',' sub_expr								{$$ = $1,$3;}
     |sub_expr		                                    {$$ = $1;}
 		;
 
 sub_expr:
-    sub_expr '>' sub_expr											{$$ = ($1 > $3);}
-    |sub_expr '<' sub_expr											{$$ = ($1 < $3);}
-    |sub_expr EQ sub_expr												{$$ = ($1 == $3);}
+    sub_expr '>' sub_expr						{$$ = ($1 > $3);}
+    |sub_expr '<' sub_expr						{$$ = ($1 < $3);}
+    |sub_expr EQ sub_expr						{$$ = ($1 == $3);}
     |sub_expr NOT_EQ sub_expr                   {$$ = ($1 != $3);}
     |sub_expr LS_EQ sub_expr                    {$$ = ($1 <= $3);}
     |sub_expr GR_EQ sub_expr                    {$$ = ($1 >= $3);}
-		|sub_expr LOGICAL_AND sub_expr              {$$ = ($1 && $3);}
-		|sub_expr LOGICAL_OR sub_expr               {$$ = ($1 || $3);}
-		|'!' sub_expr                               {$$ = (!$2);}
-		|arithmetic_expr														{$$ = $1;}
+	|sub_expr LOGICAL_AND sub_expr              {$$ = ($1 && $3);}
+	|sub_expr LOGICAL_OR sub_expr               {$$ = ($1 || $3);}
+	|'!' sub_expr                               {$$ = (!$2);}
+	|arithmetic_expr							{$$ = $1;}
     |assignment_expr                            {$$ = $1;}
-		|unary_expr                                 {$$ = $1;}
+	|unary_expr                                 {$$ = $1;}
     /* |IDENTIFIER                                     {$$ = $1->value;}
-    |constant                                       {$$ = $1;} */
+    |constant                                   {$$ = $1;} */
 		//|array_index
     ;
 
@@ -199,14 +199,14 @@ sub_expr:
 assignment_expr :lhs assign_op arithmetic_expr     {$$ = $1->value = Evaluate($1->value,$2,$3);}
     |lhs assign_op array_index                     {$$ = 0;}
     |lhs assign_op function_call                   {$$ = 0;}
-		|lhs assign_op unary_expr                      {$$ = $1->value = Evaluate($1->value,$2,$3);}
-		|unary_expr assign_op unary_expr               {$$ = 0;}
+	|lhs assign_op unary_expr                      {$$ = $1->value = Evaluate($1->value,$2,$3);}
+	|unary_expr assign_op unary_expr               {$$ = 0;}
     ;
 
 unary_expr:	lhs INCREMENT                          {$$ = $1->value = ($1->value)++;}
-		|lhs DECREMENT                                 {$$ = $1->value = ($1->value)--;}
-		|DECREMENT lhs                                 {$$ = $2->value = --($2->value);}
-		|INCREMENT lhs                                 {$$ = $2->value = ++($2->value);}
+	|lhs DECREMENT                                 {$$ = $1->value = ($1->value)--;}
+	|DECREMENT lhs                                 {$$ = $2->value = --($2->value);}
+	|INCREMENT lhs                                 {$$ = $2->value = ++($2->value);}
 
 lhs:IDENTIFIER                                     {$$ = $1; if(! $1->data_type) $1->data_type = current_dtype;}
     //|array_index
@@ -224,8 +224,8 @@ arithmetic_expr: arithmetic_expr '+' arithmetic_expr    {$$ = $1 + $3;}
     |arithmetic_expr '-' arithmetic_expr                {$$ = $1 - $3;}
     |arithmetic_expr '*' arithmetic_expr                {$$ = $1 * $3;}
     |arithmetic_expr '/' arithmetic_expr                {$$ = ($3 == 0) ? yyerror("Divide by 0!") : ($1 / $3);}
-		|arithmetic_expr '%' arithmetic_expr                {$$ = (int)$1 % (int)$3;}
-		|'(' arithmetic_expr ')'                            {$$ = $2;}
+	|arithmetic_expr '%' arithmetic_expr                {$$ = (int)$1 % (int)$3;}
+	|'(' arithmetic_expr ')'                            {$$ = $2;}
     |'-' arithmetic_expr %prec UMINUS                   {$$ = -$2;}
     |IDENTIFIER                                         {$$ = $1 -> value;}
     |constant                                           {$$ = $1;}
