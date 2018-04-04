@@ -807,7 +807,9 @@ void displayICG()
 
 	for(int i=0; i<ICG.size();i++)
 	outfile << ICG[i] <<endl;
-	outfile<<nextinstr<<": exit";
+
+	outfile << nextinstr << ": exit";
+
 	outfile.close();
 }
 
@@ -839,19 +841,14 @@ int main(int argc, char *argv[])
 			printf("\nPARSING FAILED!\n\n\n");
 	}
 
-	/* printf("SYMBOL TABLES\n\n");
-	display_all(); */
-
-	/* printf("CONSTANT TABLE");
-	display_constant_table(constant_table);  */
-
-	/* display_all(); */
-
 	displayICG();
+/*
+	printf("SYMBOL TABLES\n\n");
+	display_all();
 
+	printf("CONSTANT TABLE");
+	display_constant_table(constant_table);*/
 
-	fclose(yyin);
-	return 0;
 }
 
 int yyerror(const char *msg)
