@@ -9,7 +9,7 @@
 
 	#define SYMBOL_TABLE symbol_table_list[current_scope].symbol_table
 
-  extern entry_t** constant_table;
+  	extern entry_t** constant_table;
 
 	int current_dtype;
 
@@ -23,7 +23,7 @@
 	int param_list[10];
 	int p_idx = 0;
 	int p=0;
-  int rhs = 0;
+  	int rhs = 0;
 
 	void type_check(int,int,int);
 	vector<int> merge(vector<int>& v1, vector<int>& v2);
@@ -125,22 +125,24 @@ builder: function
 			 ;
 
  /* This is how a function looks like */
-function: type identifier 	{
-								func_type = current_dtype;
-								is_declaration = 0;
-								current_scope = create_new_scope();
-								gencode($2->lexeme + string(":"));
-							}
+function: type identifier 	
+			{
+				func_type = current_dtype;
+				is_declaration = 0;
+				current_scope = create_new_scope();
+				gencode($2->lexeme + string(":"));
+			}
 
-		 '(' argument_list ')' 	{
-									is_declaration = 0;
-									fill_parameter_list($2,param_list,p_idx);
-									p_idx = 0;
-									is_func = 1;
-									p=1;
-								}
+		 '(' argument_list ')' 	
+		 	{
+				is_declaration = 0;
+				fill_parameter_list($2,param_list,p_idx);
+				p_idx = 0;
+				is_func = 1;
+				p=1;
+			}
 
-		 compound_stmt	{   is_func = 0;}
+		 compound_stmt	{   is_func = 0;	}
           
 		;
  
@@ -376,7 +378,6 @@ sub_expr:
 				$$ = new content_t();
 				gencode_rel($$, $1, $3, string(" > "));
 			}
-/*1  2        3         4        5        6    7        8     9          10 11	12		 13*/
 		| sub_expr '<' sub_expr
 			{
 				type_check($1->data_type,$3->data_type,2);
