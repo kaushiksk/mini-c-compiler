@@ -1,0 +1,4 @@
+#!/bin/bash
+lex lexer.l
+yacc -d parser.y -v
+g++ -std=c++11 -g y.tab.c -ly -ll -o icg

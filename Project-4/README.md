@@ -15,7 +15,7 @@ This code is built upon the semantic analyser designed in Project-3 with some mo
 
 
 ### FEATURES
- - Nackward compatibility with Semantic Analyser from Project-3
+ - Backward compatibility with Semantic Analyser from Project-3
  - Code generation for arithmetic expressions
  - Backpatching for `if-else` statements and `nested if-else`
  - Backpatching for `while` and `for` loops
