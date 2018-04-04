@@ -1,20 +1,24 @@
-## FEATURES
- - Nested code blocks
- - +=, -= supported
- - for loops and nested for loops
- - integer assignment and declaration
- - if-else handled
- - array assignment, array declaration
- - comma separated initialization/declaration e.g int a=10,b;
- - support for short, long , long long , signed and unsigned
- - while statements supported
- - unary expressions supported in both lhs, rhs and standalone statements
+# Compiler Design Project-4
 
- ## TODO
-  [x] if else and dangling else rules
-  [x] while statement
-  [x] See if LONG LONG INT actually works
-  [x] Add grammar for ++, --
-  [ ] Evaluate expression and add to symbol table
-  [ ] Test with as many test cases as possible
-  [ ] How to display specific errors with lineno
+## Intermediate Code Generation for a subset of the C language
+This code is built upon the semantic analyser designed in Project-3 with some modifications to the earlier structure.
+
+### Team Members
+ - Karthik M (15CO221)
+ - Kaushik S Kalmady (15CO222)
+
+### Installation and running
+ 1. Please make sure you have Lex/Flex and Yacc/Bison installed
+ 2. Next run `$ chmod +x compile` 
+ 3. `$ ./compile`
+ 4. To run the parser `$./icg test-file.c`
+
+
+### FEATURES
+ - Nackward compatibility with Semantic Analyser from Project-3
+ - Code generation for arithmetic expressions
+ - Backpatching for `if-else` statements and `nested if-else`
+ - Backpatching for `while` and `for` loops
+ - Array indexing
+ - Backpatching for logical amd relational expressions
+ - Jumps for `break` and `continue`
